@@ -1,0 +1,160 @@
+{
+  "kind": "spec_vs_diff_report",
+  "version": "1.0",
+  "generatedAt": "2026-02-16T06:44:46.969Z",
+  "summary": "Diff adds a new Motoko backend actor plus a React frontend with routing, custom owner/customer login, customer registration, feedback and appointment submission pages, an owner dashboard (tabs for test results/appointments/feedback/users/password resets), PWA install prompt component, and an app background/theme. Several requested capabilities are not evidenced in the provided diff summary (notably editable content UI, test-result lookup/history, password-reset delay policy, PWA manifest/service worker, and client-side QR generation).",
+  "missing_requirements": [
+    {
+      "id": "REQ-2",
+      "requirement": "Create a public/pre-login Shop Info view with the exact address, both contact numbers, and exact timings string; also accessible post-login.",
+      "reason": "A route and page component are referenced, but the diff summary does not include the ShopInfoPage implementation or any evidence that the required exact strings are displayed.",
+      "evidence": [
+        "frontend/src/App.tsx (ShopInfoPage route only; ShopInfoPage content not shown)"
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "requirement": "Owner-managed editable content system for key page text; editable from Owner Dashboard; persisted and visible to customers; non-owners cannot edit.",
+      "reason": "Backend/query hooks for getContent/updateContent exist, but no Owner Dashboard UI section for editing/saving content is evidenced in the shown dashboard components.",
+      "evidence": [
+        "backend/main.mo (contentUpdates var shown)",
+        "frontend/src/hooks/useQueries.ts (useGetContent/useUpdateContent)",
+        "frontend/src/pages/owner/OwnerDashboardPage.tsx (tabs shown; no content editor evidenced)"
+      ]
+    },
+    {
+      "id": "REQ-6",
+      "requirement": "Customers can search/view test results by serial number and see previous results/history; owner can edit existing results.",
+      "reason": "Owner-side add/update form exists, but the customer lookup page and any history mechanism are not shown in the diff summary. Also no evidence of an owner UI for listing existing records and selecting one to edit (beyond re-submitting in the form).",
+      "evidence": [
+        "frontend/src/pages/owner/TestResultsManager.tsx (only add/update dialog form shown)",
+        "frontend/src/App.tsx (TestResultsLookupPage route only; page content not shown)"
+      ]
+    },
+    {
+      "id": "REQ-8",
+      "requirement": "Forgot Password workflow with owner-managed pending requests and 4-digit passcode; customer resets using mobile+passcode inside app; post-reset login works.",
+      "reason": "Customer request page and owner passcode generation UI use localStorage, but the customer reset page implementation is not shown; also there is no evidence the reset flow actually updates the stored customer password and enables login with the new password.",
+      "evidence": [
+        "frontend/src/pages/ForgotPasswordRequestPage.tsx (stores requests in localStorage)",
+        "frontend/src/pages/owner/PasswordResetsSection.tsx (stores passcodes in localStorage)",
+        "frontend/src/App.tsx (ResetPasswordWithPasscodePage route only; page content not shown)"
+      ]
+    },
+    {
+      "id": "REQ-9",
+      "requirement": "5-minute delay policy after owner-initiated password reset with countdown message; new password valid only after 5 minutes.",
+      "reason": "No evidence of recording reset time, enforcing a 5-minute delay, or displaying remaining time in any shown file.",
+      "evidence": [
+        "frontend/src/pages/owner/PasswordResetsSection.tsx (passcode generation only; no delay logic shown)",
+        "frontend/src/pages/ForgotPasswordRequestPage.tsx (no delay logic shown)",
+        "frontend/src/auth/authStore.ts (no delay logic shown)"
+      ]
+    },
+    {
+      "id": "REQ-10",
+      "requirement": "PWA installability (manifest + service worker) and in-app install prompt/help shown only when supported.",
+      "reason": "An in-app install prompt component exists, but the diff summary provides no evidence of a web app manifest or service worker setup.",
+      "evidence": [
+        "frontend/src/components/PwaInstallHelp.tsx (beforeinstallprompt UI only)"
+      ]
+    },
+    {
+      "id": "REQ-11",
+      "requirement": "Display shareable app link and generate an on-screen QR code client-side for the same URL.",
+      "reason": "A share link card exists, but QR generation is done via a third-party HTTP API rather than client-side generation as requested.",
+      "evidence": [
+        "frontend/src/components/ShareAppLinkCard.tsx (uses https://api.qrserver.com/...)"
+      ]
+    },
+    {
+      "id": "REQ-12",
+      "requirement": "Optional biometric lock using WebAuthn/Passkeys with settings UI to enable/disable; require re-auth to unlock protected pages; show unavailable if unsupported.",
+      "reason": "SettingsPage route exists but the SettingsPage implementation and any WebAuthn logic are not shown in the diff summary.",
+      "evidence": [
+        "frontend/src/App.tsx (SettingsPage route only; content not shown)"
+      ]
+    },
+    {
+      "id": "REQ-13",
+      "requirement": "Owner dashboard tables provide explicit Edit actions; Test Results table supports an 'Add column' capability (custom field name/value stored and displayed), visible to customers on lookup.",
+      "reason": "Test result form includes additionalFieldName/additionalFieldValue fields, but no explicit 'Add column' flow is evidenced, and no table/list view with Edit actions for users/appointments/feedback/test results is shown in the provided excerpts.",
+      "evidence": [
+        "backend/main.mo (additionalFieldName/additionalFieldValue in TestResult type)",
+        "frontend/src/pages/owner/TestResultsManager.tsx (fields present, but no 'Add column' flow/table shown)",
+        "frontend/src/pages/owner/OwnerDashboardPage.tsx (appointments table shown without edit actions)",
+        "frontend/src/pages/owner/UsersUpdateSection.tsx (table shown without edit actions)"
+      ]
+    }
+  ],
+  "hallucinated_features": [
+    {
+      "description": "Uses an external QR-code generation API (api.qrserver.com) instead of client-side QR generation.",
+      "reason": "BuildRequest requires QR code generated client-side for the app URL; using a remote service is an unrequested dependency and contradicts the AC.",
+      "evidence": [
+        "frontend/src/components/ShareAppLinkCard.tsx"
+      ]
+    },
+    {
+      "description": "Internet Identity (AuthClient) integration and actor access-control initialization via secret URL parameter (caffeineAdminToken).",
+      "reason": "BuildRequest specifies custom owner/customer auth; it does not request Internet Identity login flows or secret-token initialization mechanics.",
+      "evidence": [
+        "frontend/src/hooks/useInternetIdentity.ts",
+        "frontend/src/hooks/useActor.ts (getSecretParameter('caffeineAdminToken'), _initializeAccessControlWithSecret)"
+      ]
+    },
+    {
+      "description": "Backend default content text references 'HetLab' and 'open 24/7' which does not match the Sri Sri Gold Testing shop info requirement.",
+      "reason": "Requested shop info must show specific address/phones/timings; the diff shows unrelated default content strings.",
+      "evidence": [
+        "backend/main.mo (contentUpdates includes 'Welcome to HetLab! Open all day 24/7.' etc.)"
+      ]
+    },
+    {
+      "description": "Customer registration includes an email field.",
+      "reason": "REQ-1 requires username, mobile number, password; email is not requested (though it may be harmless).",
+      "evidence": [
+        "backend/main.mo (Customer type includes email)",
+        "frontend/src/pages/RegisterPage.tsx (email field)"
+      ]
+    }
+  ],
+  "confidence": 0.68,
+  "changed_files": [
+    "all_files_summary.json",
+    "backend/main.mo",
+    "frontend-file-summaries.txt",
+    "frontend/index.css",
+    "frontend/index.html",
+    "frontend/public/manifest.webmanifest",
+    "frontend/public/sw.js",
+    "frontend/src/App.tsx",
+    "frontend/src/auth/authStore.ts",
+    "frontend/src/components/AppLayout.tsx",
+    "frontend/src/components/PwaInstallHelp.tsx",
+    "frontend/src/components/ShareAppLinkCard.tsx",
+    "frontend/src/hooks/useActor.ts",
+    "frontend/src/hooks/useInternetIdentity.ts",
+    "frontend/src/hooks/useQueries.ts",
+    "frontend/src/index.css",
+    "frontend/src/main.tsx",
+    "frontend/src/pages/AppointmentsPage.tsx",
+    "frontend/src/pages/FeedbackPage.tsx",
+    "frontend/src/pages/ForgotPasswordRequestPage.tsx",
+    "frontend/src/pages/LoginPage.tsx",
+    "frontend/src/pages/RegisterPage.tsx",
+    "frontend/src/pages/ResetPasswordWithPasscodePage.tsx",
+    "frontend/src/pages/SettingsPage.tsx",
+    "frontend/src/pages/ShopInfoPage.tsx",
+    "frontend/src/pages/TestResultsLookupPage.tsx",
+    "frontend/src/pages/WelcomePage.tsx",
+    "frontend/src/pages/owner/OwnerDashboardPage.tsx",
+    "frontend/src/pages/owner/PasswordResetsSection.tsx",
+    "frontend/src/pages/owner/TestResultsManager.tsx",
+    "frontend/src/pages/owner/UsersUpdateSection.tsx",
+    "frontend/src/pwa/registerServiceWorker.ts",
+    "frontend/src/utils/urlParams.ts",
+    "frontend/tailwind.config.js",
+    "project_state.json"
+  ]
+}

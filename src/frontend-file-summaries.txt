@@ -1,0 +1,3 @@
+{
+  "frontend/src/components/ShareAppLinkCard.tsx": "Reusable card component displaying current app URL with copy-to-clipboard button and QR code generated via external API service (qrserver.com) for easy sharing via WhatsApp/text/scan."
+}

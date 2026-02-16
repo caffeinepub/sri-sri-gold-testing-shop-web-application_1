@@ -1,2 +1,3 @@
-# sri-sri-gold-testing-shop-web-application_1
-Exported from Caffeine project: Sri Sri Gold Testing Shop Web Application
+## Sri Sri Gold Testing Shop Web Application
+
+To run app build and run docker image: `docker build -t app . docker run -it --network host app`
