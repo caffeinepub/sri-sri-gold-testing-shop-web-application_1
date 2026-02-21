@@ -1,320 +1,144 @@
 {
   "kind": "build_request",
-  "title": "Sri Sri Gold Testing Shop web app (owner/customer login, appointments, test results, feedback, admin dashboard, password reset, PWA, QR)",
-  "priority": "normal",
+  "title": "Fix broken features, remove Serial Number from Appointments, and ensure registered users appear in Owner dashboard",
+  "priority": "high",
   "requirements": [
     {
-      "id": "REQ-1",
-      "text": "Implement custom authentication with two roles: (1) a fixed Owner account with username \"Bhanuchand\" and password \"Prataap\"; (2) Customer accounts with registration and login using username + password and a required mobile number. After successful login, show a welcome section/page.",
+      "id": "REQ-25",
+      "text": "Fix authentication/authorization so that all feature pages (Test Results lookup, Feedback submit, Appointments booking, Daily Gold Updates view, Owner Dashboard data tabs) work without “Unauthorized”/“Actor not available” runtime errors after a user logs in with the existing username/password system.",
       "target": "both",
       "source": {
         "messageIds": [
-          "msg-2"
+          "recent-messages-4"
         ],
         "quotes": [
-          "owner login credentials (Username: Bhanuchand, Password: Prataap), customer login with as username and password, forgot password option, and a welcome section post-login."
+          "in the application inside all features are not working"
         ]
       },
       "acceptanceCriteria": [
-        "Owner can log in using exactly the provided credentials and is routed to an Owner Dashboard.",
-        "Customer can register with username, mobile number, and password; then log in with username + password.",
-        "After login, the user sees a welcome section that clearly indicates they are logged in (and whether they are Owner or Customer).",
-        "Unauthenticated users cannot access post-login pages (dashboard, feedback, appointments, results)."
+        "After successful Customer login, the following actions work end-to-end without throwing runtime errors: (1) lookup test result by serial number, (2) submit feedback, (3) submit an appointment request, (4) view Daily Gold Updates.",
+        "After successful Owner login, Owner Dashboard tabs load without runtime errors: Appointments list, Feedback list, Users list, Test Results manager, Daily Gold Updates manager.",
+        "If the backend rejects a call due to authorization, the UI shows a clear English error message explaining the user needs to sign in properly (not a blank screen or generic failure)."
       ]
     },
     {
-      "id": "REQ-2",
-      "text": "Create a public or pre-login Shop Info view that displays the shop’s basic details and also make the same information accessible post-login: address \"Opposite cloth complex, Kadapa main road, Mydukur\"; contact numbers \"7893552706\" and \"9701758114\"; timings \"9:00 AM to 8:00 PM\".",
+      "id": "REQ-26",
+      "text": "Add backend role/session handshake APIs in backend/main.mo so the frontend can register the current caller principal as either an Owner (admin) or Customer (user) based on the existing username/password flow, enabling AccessControl checks to pass for subsequent canister calls.",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "recent-messages-4"
+        ],
+        "quotes": [
+          "in the application inside all features are not working"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Backend exposes a shared method for customers to establish a session/permission (e.g., verify username/password against stored customers and then grant caller #user permissions).",
+        "Backend exposes a shared method for owners to establish a session/permission (verify owner credentials and grant caller admin permissions).",
+        "After calling the appropriate handshake method once, subsequent calls to user/admin-protected APIs succeed for that principal according to role."
+      ]
+    },
+    {
+      "id": "REQ-27",
+      "text": "Update the frontend login flow (frontend/src/pages/LoginPage.tsx) to call the new backend role/session handshake after local username/password validation succeeds, and block navigation to authenticated pages until the handshake succeeds (showing an English error if it fails).",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-2"
+          "recent-messages-4"
         ],
         "quotes": [
-          "The application should include basic shop details such as address (Opposite cloth complex, Kadapa main road, Mydukur), contact details (7893552706, 9701758114), and timings (9:00 AM to 8:00 PM)."
+          "in the application inside all features are not working"
         ]
       },
       "acceptanceCriteria": [
-        "The Shop Info screen displays the exact address, both phone numbers, and the exact timings string.",
-        "Shop Info content is readable on mobile and desktop."
+        "Customer login: on successful local credential validation, the app calls the backend customer-session handshake; only then navigates to /welcome.",
+        "Owner login: on successful local credential validation, the app calls the backend owner-session handshake; only then navigates to /owner-dashboard.",
+        "If the handshake fails, the user stays on the login page and sees an English error explaining sign-in could not be completed."
       ]
     },
     {
-      "id": "REQ-3",
-      "text": "Add an Owner-managed editable content system for key page text (e.g., welcome message and shop info text blocks). Owner must be able to edit and save these contents from the Owner Dashboard, and customers should see updated content without requiring code changes.",
+      "id": "REQ-28",
+      "text": "Ensure customer registration reliably appears for the owner by persisting new customers in the canister and rendering the Owner “Users Update” list from canister data (not only from localStorage).",
       "target": "both",
       "source": {
         "messageIds": [
-          "msg-2"
+          "recent-messages-4"
         ],
         "quotes": [
-          "while granting the owner access to update daily test results and edit page content."
+          "when user has regestered it is not showing"
         ]
       },
       "acceptanceCriteria": [
-        "Owner Dashboard includes a section to edit and save page content.",
-        "Saved content persists across refreshes and is visible to customers on relevant pages.",
-        "Non-owner users cannot edit page content."
+        "After a customer registers in frontend/src/pages/RegisterPage.tsx, the customer record is saved in the backend canister and the UI shows an English success state (or a detailed English failure reason if the canister call fails).",
+        "Owner Dashboard “Users Update” shows customers fetched from the canister and updates after a refresh (or automatically via React Query invalidation).",
+        "The owner can see at least: username, mobile number, and registration date for each registered customer from the canister data."
       ]
     },
     {
-      "id": "REQ-4",
-      "text": "Implement Feedback module: after login, customers can submit feedback on a separate Feedback page; owners can view all feedback submissions in the Owner Dashboard.",
-      "target": "both",
-      "source": {
-        "messageIds": [
-          "msg-2"
-        ],
-        "quotes": [
-          "A feedback section should be available on a separate page after login. ... the appointments will be visible to the owner, and feedback too"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Customer can navigate to a dedicated Feedback page after login and submit feedback.",
-        "Owner can view a list of feedback items (with submitter identifier and timestamp) in the dashboard.",
-        "Feedback persists and remains viewable after reload."
-      ]
-    },
-    {
-      "id": "REQ-5",
-      "text": "Implement Appointments module: customers can book an appointment; owners can view/manage all appointment requests in the Owner Dashboard.",
-      "target": "both",
-      "source": {
-        "messageIds": [
-          "msg-2"
-        ],
-        "quotes": [
-          "Additionally, the application should allow customers to book appointments... And the appointments will be visible to the owner"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Customer can create an appointment request with at least date/time and a note (or purpose).",
-        "Owner can view all appointments in a dashboard table and see key details.",
-        "Appointment records persist across reloads."
-      ]
-    },
-    {
-      "id": "REQ-6",
-      "text": "Implement Test Results module: owner can create/update daily test results; customers can search and view test results by serial number (exactly as written on the test paper) and see their previous results/history. Test results must be visible to customers by serial number lookup.",
-      "target": "both",
-      "source": {
-        "messageIds": [
-          "msg-2"
-        ],
-        "quotes": [
-          "allow customers to ... view their previous test results ... owner access to update daily test results ... The test results will be visible to the customers by their serial number, and they can search the results by their serail no mention in the test paper."
-        ]
-      },
-      "acceptanceCriteria": [
-        "Owner can add a new test result record including a serial number and result fields.",
-        "Customer can search by serial number and see matching result(s).",
-        "Customers can view a list/history of previously viewed or associated results (define and implement one consistent approach and UI).",
-        "Owner can edit an existing test result record from the dashboard."
-      ]
-    },
-    {
-      "id": "REQ-7",
-      "text": "Add Owner Dashboard \"Users update\" section that lists newly registered customers immediately, showing username, mobile number, and password as requested by the owner. Include a customer count summary for the owner (total registered customers) and clearly show how many customers are able to log in based on the current system settings.",
-      "target": "both",
-      "source": {
-        "messageIds": [
-          "msg-2"
-        ],
-        "quotes": [
-          "After registering in the app, send me the user's details like user name, mobile number, and password, and send them to the owner's dashboard in a section named users update users details in the owner's dashboard immediately, andthe owner has to know how many customers can log in to the application."
-        ]
-      },
-      "acceptanceCriteria": [
-        "Owner Dashboard contains a section titled exactly \"Users update\".",
-        "When a new user registers, the user appears in \"Users update\" without manual refresh (or via an obvious refresh button if live update is not feasible).",
-        "Owner sees total registered customer count.",
-        "The list includes username, mobile number, and the stored password value (as explicitly requested)."
-      ]
-    },
-    {
-      "id": "REQ-8",
-      "text": "Implement Forgot Password workflow that does not rely on external SMS/email providers: customer can request a password reset using their mobile number and/or username; owner can see pending reset requests and reset the password from the Owner Dashboard. Implement a 4-digit reset passcode flow where the owner can communicate the passcode to the user out-of-band (e.g., via WhatsApp), and the user can reset their password by entering mobile number + 4-digit passcode inside the app.",
-      "target": "both",
-      "source": {
-        "messageIds": [
-          "msg-2"
-        ],
-        "quotes": [
-          "forgot password option",
-          "Permit the owner to reset the passwords of the users when they send the forgot password request.",
-          "...reset the password while entering the user's mobile number and the reset pass code ... 4-digit number, then after the user can reset the password"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Customer can create a forgot-password request from the login screen.",
-        "Owner Dashboard shows a list of pending password reset requests.",
-        "Owner can generate/set a 4-digit reset passcode for a given request and mark it as active.",
-        "Customer can enter mobile number + 4-digit passcode and set a new password.",
-        "After successful reset, the customer can log in with the new password."
-      ]
-    },
-    {
-      "id": "REQ-9",
-      "text": "Implement the requested 5-minute delay behavior for owner-initiated password resets as a configurable policy: after the owner resets a user’s password, the new password becomes valid only after 5 minutes (show a countdown/availability message to the user on the reset/login screen).",
-      "target": "both",
-      "source": {
-        "messageIds": [
-          "msg-2"
-        ],
-        "quotes": [
-          "After resetting the password by the owner, the new password will appear on the user's screen after 5 minutes on their mobile screen"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Owner can reset a user password and the system records the reset time.",
-        "If the user attempts to log in/reset immediately after an owner reset, the UI indicates the password will be active after 5 minutes and shows remaining time.",
-        "After 5 minutes elapse, the new password works."
-      ]
-    },
-    {
-      "id": "REQ-10",
-      "text": "Add PWA installability so customers can install the app on mobile (Add to Home Screen). Include an in-app prompt/help section describing how to install when supported by the browser.",
+      "id": "REQ-29",
+      "text": "Remove the Serial Number field from the customer Appointments booking form UI and stop requiring users to enter it; keep the appointment submission functional by sending an empty string or a backend-safe placeholder value for serialNumber.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-2"
+          "recent-messages-4"
         ],
         "quotes": [
-          "give the option to install as an application on the mobile phones of users."
+          "remove serial no in appointement"
         ]
       },
       "acceptanceCriteria": [
-        "App provides a web app manifest and service worker so install is available on supported browsers.",
-        "UI includes an install prompt/help when installation is supported, and it is not shown when unsupported.",
-        "Installed app launches with proper name and icon."
+        "frontend/src/pages/AppointmentsPage.tsx no longer displays the “Serial Number / Reference” input.",
+        "Submitting an appointment request still succeeds and shows the existing English success toast/message.",
+        "No validation error requires a serial number in the appointment booking UI."
       ]
     },
     {
-      "id": "REQ-11",
-      "text": "Generate and display a shareable application link and an on-screen QR code for the app URL so it can be shared via WhatsApp/text/link.",
+      "id": "REQ-30",
+      "text": "Remove Serial Number from appointment displays in the Owner Dashboard Appointments table so it is not shown to the owner in the UI.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-2"
+          "recent-messages-4"
         ],
         "quotes": [
-          "The application link and QR code will be shared with customers through WhatsApp,d text, link, and more."
+          "remove serial no in appointement"
         ]
       },
       "acceptanceCriteria": [
-        "A screen (or dashboard card) shows the current app URL as a copyable link.",
-        "A QR code is generated client-side for the same URL.",
-        "QR code is scannable and navigates to the app."
+        "In the Owner Dashboard appointments tab (frontend/src/pages/owner/OwnerDashboardPage.tsx), the appointments table no longer has a “Serial Number” column and does not render appointment.serialNumber."
       ]
     },
     {
-      "id": "REQ-12",
-      "text": "Implement an optional “Fingerprint/biometric lock” feature using WebAuthn/Passkeys where supported: allow users to enable/disable biometric re-authentication on the device, and require it to unlock access to the app session on that device after login.",
+      "id": "REQ-31",
+      "text": "Improve error reporting across feature mutations and queries (Appointments, Feedback, Customers) to surface actual canister error details in English instead of generic “Please try again” when a canister call fails.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-2"
+          "recent-messages-4"
         ],
         "quotes": [
-          "add lock the app with their fingerprint option in the application."
+          "remaining are showing error"
         ]
       },
       "acceptanceCriteria": [
-        "Settings UI allows enabling/disabling biometric unlock (when the browser/device supports it).",
-        "When enabled, the app requires a WebAuthn re-auth before showing protected pages on that device/session.",
-        "If unsupported, the UI clearly indicates biometric lock is unavailable."
-      ]
-    },
-    {
-      "id": "REQ-13",
-      "text": "Enhance Owner Dashboard data management UI to include explicit Edit actions for records and an \"Add column\" capability for at least the Test Results table so the owner can define an extra custom field/column name and value that is stored and displayed.",
-      "target": "both",
-      "source": {
-        "messageIds": [
-          "msg-2"
-        ],
-        "quotes": [
-          "and add the edit option and add another column option in the application in the owners dashboard"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Owner Dashboard tables (users, appointments, feedback, test results) provide an Edit action for applicable records.",
-        "Test Results management includes an \"Add column\" flow that creates at least one additional custom field that is saved and shown in the table and result detail view.",
-        "Customers can see the custom field on serial-number result lookup when present."
-      ]
-    },
-    {
-      "id": "REQ-14",
-      "text": "Apply a coherent, simple, modern visual theme (colors, typography, spacing, component styling) that complements the provided background image, and use it consistently across login, customer pages, and owner dashboard. Do not use a blue/purple primary theme.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-2"
-        ],
-        "quotes": [
-          "change the colors and fonts in the application simply and smartly, based on the background, to attractively engage users."
-        ]
-      },
-      "acceptanceCriteria": [
-        "Theme is consistent across pages (buttons, headings, cards, inputs).",
-        "Typography and colors maintain good contrast/readability on top of the background image.",
-        "Primary palette is not blue/purple-dominant."
-      ]
-    },
-    {
-      "id": "REQ-15",
-      "text": "Add the provided/attached image as a global background (responsive) across the app (at minimum on login and main shell pages) and ensure content remains readable with appropriate overlays.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-2"
-        ],
-        "quotes": [
-          "Add the attached pic in the background"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Background image is included as a static asset and rendered as a responsive background.",
-        "Foreground content remains readable (overlay/blur/tint as needed)."
+        "When submitting feedback fails, the toast/alert includes the extracted canister error detail (English).",
+        "When submitting an appointment fails, the toast/alert includes the extracted canister error detail (English).",
+        "When customer registration fails due to canister call failure, the UI shows an English error with the underlying reason when available (not only a generic message)."
       ]
     }
   ],
   "constraints": [
-    "Use English for all user-facing UI text.",
-    "Backend must remain a single Motoko actor (no additional backend services).",
-    "Do not edit files under frontend/src/components/ui or other immutablePaths; compose them instead.",
-    "No external SMS/email providers are allowed; the 4-digit reset passcode must be delivered out-of-band by the owner (e.g., WhatsApp) or handled entirely within the app.",
-    "Storing/displaying customer passwords is insecure but is included because the user explicitly requested it; if possible, add an owner-visible warning banner explaining the risk without removing the feature."
+    "Backend must remain a single Motoko actor in backend/main.mo (no additional backend services).",
+    "Do not modify files under frontend/immutablePaths (including frontend/src/hooks/useInternetIdentity.ts(x), frontend/src/hooks/useActor.ts, frontend/src/main.tsx, and frontend/src/components/ui)."
   ],
   "nonGoals": [
-    "Integrate third-party authentication providers (only custom auth / platform-supported auth).",
-    "Implement real-time chat, push notifications, or WebSocket-based live updates.",
-    "Send OTP via SMS automatically (Twilio/WhatsApp API integration is out of scope)."
+    "Do not redesign the overall UI theme or navigation beyond what is necessary to fix the broken flows and remove the appointment serial number field.",
+    "Do not add third-party auth providers, SMS, email, or external databases.",
+    "Do not change the Test Results data-entry simplification (Serial Number + Message) except as required to fix runtime errors related to authorization/session."
   ],
   "imageRequirements": {
-    "required": [
-      "Background image for app shell (shop-background.dim_1920x1080.png)",
-      "App icon for PWA (app-icon.dim_512x512.png)",
-      "App icon for PWA (app-icon.dim_192x192.png)"
-    ],
+    "required": [],
     "edits": []
-  },
-  "userProfileUpdate": {
-    "goalsToAdd": [
-      "Build a free web app for Sri Sri Gold Testing Shop with owner/customer logins, appointments, test-result lookup by serial number, feedback, admin dashboard, and PWA installability."
-    ],
-    "goalsToRemove": [],
-    "preferencesToAdd": [
-      "All user-facing text should be in English.",
-      "Prefer a simple, smart UI theme that matches a provided background image (avoid blue/purple primary palette)."
-    ],
-    "preferencesToRemove": [],
-    "miscToAdd": [
-      "Owner credentials must be fixed to Username: Bhanuchand, Password: Prataap.",
-      "Shop address: Opposite cloth complex, Kadapa main road, Mydukur. Contacts: 7893552706, 9701758114. Timings: 9:00 AM to 8:00 PM."
-    ],
-    "miscToRemove": [],
-    "fieldsToSet": {},
-    "fieldsToDelete": []
   }
 }

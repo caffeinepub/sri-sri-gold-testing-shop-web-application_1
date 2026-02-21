@@ -2,139 +2,54 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-implement-custom-authentication-with-two-roles-1-a-fixed-owner-account-with-username-bhanuchand-and-password-prataap-2-customer-accounts-with-registration-and-login-using-username-password-and-a-required-mobile-number-after-successful-login-show-a-welcome-section-page",
-      "featureTitle": "Implement custom authentication with two roles: (1) a fixed Owner account with username \"Bhanuchand\" and password \"Prataap\"; (2) Customer accounts with registration and login using username + password and a required mobile number. After successful login, show a welcome section/page.",
+      "featureId": "feature-fix-authentication-authorization-so-that-all-feature-pages-test-results-lookup-feedback-submit-appointments-booking-daily-gold-updates-view-owner-dashboard-data-tabs-work-without-unauthorized-actor-not-available-runtime-errors-after-a-user-logs-in-with-the-existing-username-password-system",
+      "featureTitle": "Fix authentication/authorization so that all feature pages (Test Results lookup, Feedback submit, Appointments booking, Daily Gold Updates view, Owner Dashboard data tabs) work without “Unauthorized”/“Actor not available” runtime errors after a user logs in with the existing username/password system.",
+      "files": [
+        "frontend/src/hooks/useQueries.ts",
+        "frontend/src/pages/DailyGoldUpdatesPage.tsx",
+        "frontend/src/pages/TestResultsLookupPage.tsx",
+        "frontend/src/pages/owner/OwnerDashboardPage.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-25"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-update-the-frontend-login-flow-frontend-src-pages-loginpage-tsx-to-call-the-new-backend-role-session-handshake-after-local-username-password-validation-succeeds-and-block-navigation-to-authenticated-pages-until-the-handshake-succeeds-showing-an-english-error-if-it-fails",
+      "featureTitle": "Update the frontend login flow (frontend/src/pages/LoginPage.tsx) to call the new backend role/session handshake after local username/password validation succeeds, and block navigation to authenticated pages until the handshake succeeds (showing an English error if it fails).",
       "files": [
         "frontend/src/App.tsx",
         "frontend/src/auth/authStore.ts",
-        "frontend/src/pages/LoginPage.tsx",
+        "frontend/src/pages/LoginPage.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-27"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-ensure-customer-registration-reliably-appears-for-the-owner-by-persisting-new-customers-in-the-canister-and-rendering-the-owner-users-update-list-from-canister-data-not-only-from-localstorage",
+      "featureTitle": "Ensure customer registration reliably appears for the owner by persisting new customers in the canister and rendering the Owner “Users Update” list from canister data (not only from localStorage).",
+      "files": [
+        "frontend/src/hooks/useQueries.ts",
         "frontend/src/pages/RegisterPage.tsx",
-        "frontend/src/pages/WelcomePage.tsx"
-      ],
-      "components": [
-        "authorization@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-1"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-create-a-public-or-pre-login-shop-info-view-that-displays-the-shop-s-basic-details-and-also-make-the-same-information-accessible-post-login-address-opposite-cloth-complex-kadapa-main-road-mydukur-contact-numbers-7893552706-and-9701758114-timings-9-00-am-to-8-00-pm",
-      "featureTitle": "Create a public or pre-login Shop Info view that displays the shop’s basic details and also make the same information accessible post-login: address \"Opposite cloth complex, Kadapa main road, Mydukur\"; contact numbers \"7893552706\" and \"9701758114\"; timings \"9:00 AM to 8:00 PM\".",
-      "files": [
-        "frontend/src/App.tsx",
-        "frontend/src/pages/ShopInfoPage.tsx"
-      ],
-      "components": [
-        "authorization@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-2"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-add-an-owner-managed-editable-content-system-for-key-page-text-e-g-welcome-message-and-shop-info-text-blocks-owner-must-be-able-to-edit-and-save-these-contents-from-the-owner-dashboard-and-customers-should-see-updated-content-without-requiring-code-changes",
-      "featureTitle": "Add an Owner-managed editable content system for key page text (e.g., welcome message and shop info text blocks). Owner must be able to edit and save these contents from the Owner Dashboard, and customers should see updated content without requiring code changes.",
-      "files": [
-        "frontend/src/pages/ShopInfoPage.tsx",
-        "frontend/src/pages/WelcomePage.tsx",
-        "frontend/src/pages/owner/OwnerDashboardPage.tsx"
-      ],
-      "components": [
-        "authorization@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-3"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-implement-feedback-module-after-login-customers-can-submit-feedback-on-a-separate-feedback-page-owners-can-view-all-feedback-submissions-in-the-owner-dashboard",
-      "featureTitle": "Implement Feedback module: after login, customers can submit feedback on a separate Feedback page; owners can view all feedback submissions in the Owner Dashboard.",
-      "files": [
-        "frontend/src/App.tsx",
-        "frontend/src/pages/FeedbackPage.tsx",
-        "frontend/src/pages/owner/OwnerDashboardPage.tsx"
-      ],
-      "components": [
-        "authorization@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-4"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-implement-appointments-module-customers-can-book-an-appointment-owners-can-view-manage-all-appointment-requests-in-the-owner-dashboard",
-      "featureTitle": "Implement Appointments module: customers can book an appointment; owners can view/manage all appointment requests in the Owner Dashboard.",
-      "files": [
-        "frontend/src/App.tsx",
-        "frontend/src/pages/AppointmentsPage.tsx",
-        "frontend/src/pages/owner/OwnerDashboardPage.tsx"
-      ],
-      "components": [
-        "authorization@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-5"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-implement-test-results-module-owner-can-create-update-daily-test-results-customers-can-search-and-view-test-results-by-serial-number-exactly-as-written-on-the-test-paper-and-see-their-previous-results-history-test-results-must-be-visible-to-customers-by-serial-number-lookup",
-      "featureTitle": "Implement Test Results module: owner can create/update daily test results; customers can search and view test results by serial number (exactly as written on the test paper) and see their previous results/history. Test results must be visible to customers by serial number lookup.",
-      "files": [
-        "frontend/src/App.tsx",
-        "frontend/src/pages/TestResultsLookupPage.tsx",
-        "frontend/src/pages/owner/OwnerDashboardPage.tsx",
-        "frontend/src/pages/owner/TestResultsManager.tsx"
-      ],
-      "components": [
-        "authorization@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-6"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-add-owner-dashboard-users-update-section-that-lists-newly-registered-customers-immediately-showing-username-mobile-number-and-password-as-requested-by-the-owner-include-a-customer-count-summary-for-the-owner-total-registered-customers-and-clearly-show-how-many-customers-are-able-to-log-in-based-on-the-current-system-settings",
-      "featureTitle": "Add Owner Dashboard \"Users update\" section that lists newly registered customers immediately, showing username, mobile number, and password as requested by the owner. Include a customer count summary for the owner (total registered customers) and clearly show how many customers are able to log in based on the current system settings.",
-      "files": [
-        "frontend/src/pages/RegisterPage.tsx",
-        "frontend/src/pages/owner/OwnerDashboardPage.tsx",
         "frontend/src/pages/owner/UsersUpdateSection.tsx"
       ],
       "components": [
@@ -146,19 +61,15 @@
         "github-export-icp-cli@1.0.0"
       ],
       "testIds": [
-        "REQ-7"
+        "REQ-28"
       ],
       "confidence": "high"
     },
     {
-      "featureId": "feature-implement-forgot-password-workflow-that-does-not-rely-on-external-sms-email-providers-customer-can-request-a-password-reset-using-their-mobile-number-and-or-username-owner-can-see-pending-reset-requests-and-reset-the-password-from-the-owner-dashboard-implement-a-4-digit-reset-passcode-flow-where-the-owner-can-communicate-the-passcode-to-the-user-out-of-band-e-g-via-whatsapp-and-the-user-can-reset-their-password-by-entering-mobile-number-4-digit-passcode-inside-the-app",
-      "featureTitle": "Implement Forgot Password workflow that does not rely on external SMS/email providers: customer can request a password reset using their mobile number and/or username; owner can see pending reset requests and reset the password from the Owner Dashboard. Implement a 4-digit reset passcode flow where the owner can communicate the passcode to the user out-of-band (e.g., via WhatsApp), and the user can reset their password by entering mobile number + 4-digit passcode inside the app.",
+      "featureId": "feature-remove-the-serial-number-field-from-the-customer-appointments-booking-form-ui-and-stop-requiring-users-to-enter-it-keep-the-appointment-submission-functional-by-sending-an-empty-string-or-a-backend-safe-placeholder-value-for-serialnumber",
+      "featureTitle": "Remove the Serial Number field from the customer Appointments booking form UI and stop requiring users to enter it; keep the appointment submission functional by sending an empty string or a backend-safe placeholder value for serialNumber.",
       "files": [
-        "frontend/src/App.tsx",
-        "frontend/src/pages/ForgotPasswordRequestPage.tsx",
-        "frontend/src/pages/LoginPage.tsx",
-        "frontend/src/pages/ResetPasswordWithPasscodePage.tsx",
-        "frontend/src/pages/owner/PasswordResetsSection.tsx"
+        "frontend/src/pages/AppointmentsPage.tsx"
       ],
       "components": [
         "authorization@4.0.0",
@@ -169,61 +80,14 @@
         "github-export-icp-cli@1.0.0"
       ],
       "testIds": [
-        "REQ-8"
+        "REQ-29"
       ],
       "confidence": "high"
     },
     {
-      "featureId": "feature-implement-the-requested-5-minute-delay-behavior-for-owner-initiated-password-resets-as-a-configurable-policy-after-the-owner-resets-a-user-s-password-the-new-password-becomes-valid-only-after-5-minutes-show-a-countdown-availability-message-to-the-user-on-the-reset-login-screen",
-      "featureTitle": "Implement the requested 5-minute delay behavior for owner-initiated password resets as a configurable policy: after the owner resets a user’s password, the new password becomes valid only after 5 minutes (show a countdown/availability message to the user on the reset/login screen).",
+      "featureId": "feature-remove-serial-number-from-appointment-displays-in-the-owner-dashboard-appointments-table-so-it-is-not-shown-to-the-owner-in-the-ui",
+      "featureTitle": "Remove Serial Number from appointment displays in the Owner Dashboard Appointments table so it is not shown to the owner in the UI.",
       "files": [
-        "frontend/src/pages/LoginPage.tsx",
-        "frontend/src/pages/ResetPasswordWithPasscodePage.tsx",
-        "frontend/src/pages/owner/PasswordResetsSection.tsx"
-      ],
-      "components": [
-        "authorization@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-9"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-add-pwa-installability-so-customers-can-install-the-app-on-mobile-add-to-home-screen-include-an-in-app-prompt-help-section-describing-how-to-install-when-supported-by-the-browser",
-      "featureTitle": "Add PWA installability so customers can install the app on mobile (Add to Home Screen). Include an in-app prompt/help section describing how to install when supported by the browser.",
-      "files": [
-        "frontend/public/manifest.webmanifest",
-        "frontend/public/sw.js",
-        "frontend/src/components/PwaInstallHelp.tsx",
-        "frontend/src/main.tsx",
-        "frontend/src/pages/WelcomePage.tsx",
-        "frontend/src/pwa/registerServiceWorker.ts"
-      ],
-      "components": [
-        "authorization@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-10"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-generate-and-display-a-shareable-application-link-and-an-on-screen-qr-code-for-the-app-url-so-it-can-be-shared-via-whatsapp-text-link",
-      "featureTitle": "Generate and display a shareable application link and an on-screen QR code for the app URL so it can be shared via WhatsApp/text/link.",
-      "files": [
-        "frontend/src/components/ShareAppLinkCard.tsx",
-        "frontend/src/pages/WelcomePage.tsx",
         "frontend/src/pages/owner/OwnerDashboardPage.tsx"
       ],
       "components": [
@@ -235,16 +99,18 @@
         "github-export-icp-cli@1.0.0"
       ],
       "testIds": [
-        "REQ-11"
+        "REQ-30"
       ],
       "confidence": "high"
     },
     {
-      "featureId": "feature-implement-an-optional-fingerprint-biometric-lock-feature-using-webauthn-passkeys-where-supported-allow-users-to-enable-disable-biometric-re-authentication-on-the-device-and-require-it-to-unlock-access-to-the-app-session-on-that-device-after-login",
-      "featureTitle": "Implement an optional “Fingerprint/biometric lock” feature using WebAuthn/Passkeys where supported: allow users to enable/disable biometric re-authentication on the device, and require it to unlock access to the app session on that device after login.",
+      "featureId": "feature-improve-error-reporting-across-feature-mutations-and-queries-appointments-feedback-customers-to-surface-actual-canister-error-details-in-english-instead-of-generic-please-try-again-when-a-canister-call-fails",
+      "featureTitle": "Improve error reporting across feature mutations and queries (Appointments, Feedback, Customers) to surface actual canister error details in English instead of generic “Please try again” when a canister call fails.",
       "files": [
-        "frontend/src/App.tsx",
-        "frontend/src/pages/SettingsPage.tsx"
+        "frontend/src/pages/AppointmentsPage.tsx",
+        "frontend/src/pages/FeedbackPage.tsx",
+        "frontend/src/pages/RegisterPage.tsx",
+        "frontend/src/utils/canisterErrors.ts"
       ],
       "components": [
         "authorization@4.0.0",
@@ -255,70 +121,7 @@
         "github-export-icp-cli@1.0.0"
       ],
       "testIds": [
-        "REQ-12"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-enhance-owner-dashboard-data-management-ui-to-include-explicit-edit-actions-for-records-and-an-add-column-capability-for-at-least-the-test-results-table-so-the-owner-can-define-an-extra-custom-field-column-name-and-value-that-is-stored-and-displayed",
-      "featureTitle": "Enhance Owner Dashboard data management UI to include explicit Edit actions for records and an \"Add column\" capability for at least the Test Results table so the owner can define an extra custom field/column name and value that is stored and displayed.",
-      "files": [
-        "frontend/src/pages/TestResultsLookupPage.tsx",
-        "frontend/src/pages/owner/OwnerDashboardPage.tsx",
-        "frontend/src/pages/owner/TestResultsManager.tsx"
-      ],
-      "components": [
-        "authorization@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-13"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-apply-a-coherent-simple-modern-visual-theme-colors-typography-spacing-component-styling-that-complements-the-provided-background-image-and-use-it-consistently-across-login-customer-pages-and-owner-dashboard-do-not-use-a-blue-purple-primary-theme",
-      "featureTitle": "Apply a coherent, simple, modern visual theme (colors, typography, spacing, component styling) that complements the provided background image, and use it consistently across login, customer pages, and owner dashboard. Do not use a blue/purple primary theme.",
-      "files": [
-        "frontend/src/App.tsx",
-        "frontend/src/components/AppLayout.tsx",
-        "frontend/src/index.css",
-        "frontend/tailwind.config.js"
-      ],
-      "components": [
-        "authorization@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-14"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-add-the-provided-attached-image-as-a-global-background-responsive-across-the-app-at-minimum-on-login-and-main-shell-pages-and-ensure-content-remains-readable-with-appropriate-overlays",
-      "featureTitle": "Add the provided/attached image as a global background (responsive) across the app (at minimum on login and main shell pages) and ensure content remains readable with appropriate overlays.",
-      "files": [
-        "frontend/src/components/AppLayout.tsx",
-        "frontend/src/index.css"
-      ],
-      "components": [
-        "authorization@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-15"
+        "REQ-31"
       ],
       "confidence": "high"
     }

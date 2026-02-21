@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from '@tanstack/react-router';
 import { useAuth } from '../auth/authStore';
+import { useActor } from '../hooks/useActor';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -9,10 +10,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { extractErrorMessage } from '../utils/canisterErrors';
 
 export default function LoginPage() {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, setHandshakeComplete, logout } = useAuth();
+  const { actor } = useActor();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -26,14 +29,38 @@ export default function LoginPage() {
 
     try {
       const success = await login(ownerForm.username, ownerForm.password);
-      if (success) {
-        toast.success('Welcome back, Owner!');
-        navigate({ to: '/owner-dashboard' });
-      } else {
+      if (!success) {
         setError('Invalid owner credentials');
+        setLoading(false);
+        return;
+      }
+
+      // Perform backend handshake
+      if (!actor) {
+        setError('System not ready. Please try again.');
+        logout();
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const handshakeSuccess = await actor.registerAsOwner(ownerForm.username, ownerForm.password);
+        if (handshakeSuccess) {
+          setHandshakeComplete(true);
+          toast.success('Welcome back, Owner!');
+          navigate({ to: '/owner-dashboard' });
+        } else {
+          setError('Failed to establish session. Please check your credentials.');
+          logout();
+        }
+      } catch (err) {
+        const errorMsg = extractErrorMessage(err);
+        setError(`Sign-in could not be completed: ${errorMsg}`);
+        logout();
       }
     } catch (err) {
       setError('Login failed. Please try again.');
+      logout();
     } finally {
       setLoading(false);
     }
@@ -46,14 +73,38 @@ export default function LoginPage() {
 
     try {
       const success = await login(customerForm.username, customerForm.password);
-      if (success) {
-        toast.success('Welcome back!');
-        navigate({ to: '/welcome' });
-      } else {
+      if (!success) {
         setError('Invalid username or password');
+        setLoading(false);
+        return;
+      }
+
+      // Perform backend handshake
+      if (!actor) {
+        setError('System not ready. Please try again.');
+        logout();
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const handshakeSuccess = await actor.registerAsCustomer(customerForm.username, customerForm.password);
+        if (handshakeSuccess) {
+          setHandshakeComplete(true);
+          toast.success('Welcome back!');
+          navigate({ to: '/welcome' });
+        } else {
+          setError('Failed to establish session. Please check your credentials.');
+          logout();
+        }
+      } catch (err) {
+        const errorMsg = extractErrorMessage(err);
+        setError(`Sign-in could not be completed: ${errorMsg}`);
+        logout();
       }
     } catch (err) {
       setError('Login failed. Please try again.');
+      logout();
     } finally {
       setLoading(false);
     }

@@ -40,6 +40,7 @@ export function useGetTestResult(serialNumber: string) {
       return actor.getTestResult(serialNumber);
     },
     enabled: !!actor && !isFetching && !!serialNumber,
+    retry: false,
   });
 }
 
@@ -48,27 +49,30 @@ export function useUpdateTestResult() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (result: TestResult) => {
+    mutationFn: async (data: { serialNumber: string; message: string }) => {
       if (!actor) throw new Error('Actor not available');
       return actor.updateTestResult(
-        result.serialNumber,
-        result.cts,
-        result.hivTests,
-        result.platingTests,
-        result.potherTests,
-        result.hepatitisC,
-        result.hepatitisB,
-        result.rns,
-        result.serialNumber2,
-        result.coagulase,
-        result.kbDisc,
-        result.urineFullExam,
-        result.additionalFieldName || null,
-        result.additionalFieldValue || null
+        data.serialNumber,
+        BigInt(0), // cts
+        BigInt(0), // hivTests
+        BigInt(0), // platingTests
+        BigInt(0), // potherTests
+        BigInt(0), // hepatitisC
+        BigInt(0), // hepatitisB
+        BigInt(0), // rns
+        '', // serialNumber2
+        '', // coagulase
+        '', // kbDisc
+        '', // urineFullExam
+        null, // additionalFieldName - null represents None for optional Motoko ?Text
+        null, // additionalFieldValue - null represents None for optional Motoko ?Text
+        data.message
       );
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
+      // Invalidate both general and specific test result queries
       queryClient.invalidateQueries({ queryKey: ['testResult'] });
+      queryClient.invalidateQueries({ queryKey: ['testResult', variables.serialNumber] });
     },
   });
 }
@@ -83,6 +87,7 @@ export function useGetAllFeedback() {
       return actor.getAllEntries();
     },
     enabled: !!actor && !isFetching,
+    retry: false,
   });
 }
 
@@ -111,6 +116,7 @@ export function useGetAppointments() {
       return actor.getAppointments();
     },
     enabled: !!actor && !isFetching,
+    retry: false,
   });
 }
 
@@ -129,6 +135,21 @@ export function useAddAppointment() {
   });
 }
 
+export function useAddCustomer() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ username, password, mobileNumber, email }: { username: string; password: string; mobileNumber: string; email: string }) => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.addCustomer(username, password, mobileNumber, email);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['customers'] });
+    },
+  });
+}
+
 export function useGetAllCustomers() {
   const { actor, isFetching } = useActor();
 
@@ -139,6 +160,7 @@ export function useGetAllCustomers() {
       return actor.getAllCustomersPublicView();
     },
     enabled: !!actor && !isFetching,
+    retry: false,
   });
 }
 
@@ -152,33 +174,7 @@ export function useGetCustomerCount() {
       return actor.getCustomerCount();
     },
     enabled: !!actor && !isFetching,
-  });
-}
-
-export function useAddCustomer() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async ({ username, password, mobileNumber, email }: { username: string; password: string; mobileNumber: string; email: string }) => {
-      if (!actor) throw new Error('Actor not available');
-      return actor.addCustomer(username, password, mobileNumber, email);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['customers'] });
-      queryClient.invalidateQueries({ queryKey: ['customerCount'] });
-    },
-  });
-}
-
-export function useRequestPasswordReset() {
-  const { actor } = useActor();
-
-  return useMutation({
-    mutationFn: async ({ mobileNumber, newPassword }: { mobileNumber: string; newPassword: string }) => {
-      if (!actor) throw new Error('Actor not available');
-      return actor.requestPasswordReset(mobileNumber, newPassword);
-    },
+    retry: false,
   });
 }
 
@@ -204,13 +200,31 @@ export function useVerifyResetPasscode() {
   });
 }
 
-export function useFinalizePasswordReset() {
+export function useGetAllDailyGoldUpdates() {
+  const { actor, isFetching } = useActor();
+
+  return useQuery<Array<[string, string]>>({
+    queryKey: ['dailyGoldUpdates'],
+    queryFn: async () => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.getAllDailyGoldUpdates();
+    },
+    enabled: !!actor && !isFetching,
+    retry: false,
+  });
+}
+
+export function useSetDailyGoldUpdate() {
   const { actor } = useActor();
+  const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (mobileNumber: string) => {
+    mutationFn: async ({ date, content }: { date: string; content: string }) => {
       if (!actor) throw new Error('Actor not available');
-      return actor.finalizePasswordReset(mobileNumber);
+      return actor.setDailyGoldUpdate(date, content);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['dailyGoldUpdates'] });
     },
   });
 }

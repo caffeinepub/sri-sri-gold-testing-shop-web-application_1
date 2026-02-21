@@ -1,26 +1,16 @@
-import { useEffect, useState } from 'react';
+import { useGetAllCustomers } from '../../hooks/useQueries';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { RefreshCw, AlertTriangle } from 'lucide-react';
+import { RefreshCw, Loader2, AlertCircle } from 'lucide-react';
+import { extractErrorMessage } from '../../utils/canisterErrors';
 
 export default function UsersUpdateSection() {
-  const [customers, setCustomers] = useState<any[]>([]);
+  const { data: customers, isLoading, error, refetch } = useGetAllCustomers();
 
-  const loadCustomers = () => {
-    const stored = localStorage.getItem('customers');
-    if (stored) {
-      setCustomers(JSON.parse(stored));
-    }
-  };
-
-  useEffect(() => {
-    loadCustomers();
-    const interval = setInterval(loadCustomers, 5000);
-    return () => clearInterval(interval);
-  }, []);
+  const errorMessage = error ? extractErrorMessage(error) : '';
 
   return (
     <Card>
@@ -29,30 +19,43 @@ export default function UsersUpdateSection() {
           <div>
             <CardTitle>Users Update</CardTitle>
             <CardDescription>
-              View registered customers and their details
+              View registered customers from the canister
             </CardDescription>
           </div>
-          <Button variant="outline" size="sm" onClick={loadCustomers}>
-            <RefreshCw className="w-4 h-4 mr-2" />
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => refetch()}
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <RefreshCw className="w-4 h-4 mr-2" />
+            )}
             Refresh
           </Button>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        <Alert variant="destructive">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertDescription>
-            <strong>Security Warning:</strong> Displaying passwords in plain text is insecure and not recommended. This feature is included only as explicitly requested.
-          </AlertDescription>
-        </Alert>
-
         <div className="flex items-center gap-4">
           <Badge variant="outline" className="text-lg px-4 py-2">
-            Total Customers: {customers.length}
+            Total Customers: {customers?.length || 0}
           </Badge>
         </div>
 
-        {customers.length === 0 ? (
+        {isLoading ? (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+          </div>
+        ) : error ? (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              Failed to load customers: {errorMessage}
+            </AlertDescription>
+          </Alert>
+        ) : !customers || customers.length === 0 ? (
           <Alert>
             <AlertDescription>No customers registered yet.</AlertDescription>
           </Alert>
@@ -63,8 +66,6 @@ export default function UsersUpdateSection() {
                 <TableRow>
                   <TableHead>Username</TableHead>
                   <TableHead>Mobile Number</TableHead>
-                  <TableHead>Password</TableHead>
-                  <TableHead>Registration Date</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -72,8 +73,6 @@ export default function UsersUpdateSection() {
                   <TableRow key={index}>
                     <TableCell className="font-medium">{customer.username}</TableCell>
                     <TableCell>{customer.mobileNumber}</TableCell>
-                    <TableCell className="font-mono text-sm">{customer.password}</TableCell>
-                    <TableCell>{new Date(customer.registrationDate).toLocaleString()}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

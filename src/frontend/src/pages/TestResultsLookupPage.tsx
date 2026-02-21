@@ -5,8 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Search, FileText, History, X } from 'lucide-react';
+import { Search, FileText, History, X, AlertCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { extractErrorMessage } from '../utils/canisterErrors';
 
 export default function TestResultsLookupPage() {
   const [serialNumber, setSerialNumber] = useState('');
@@ -44,6 +45,11 @@ export default function TestResultsLookupPage() {
     setHistory([]);
     localStorage.removeItem('testResultsHistory');
   };
+
+  const errorMessage = error ? extractErrorMessage(error) : '';
+  const isUnauthorized = errorMessage.toLowerCase().includes('unauthorized') || 
+                         errorMessage.toLowerCase().includes('sign in') ||
+                         errorMessage.toLowerCase().includes('authenticated');
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -121,7 +127,13 @@ export default function TestResultsLookupPage() {
 
             {error && (
               <Alert variant="destructive">
-                <AlertDescription>Failed to load test results. Please try again.</AlertDescription>
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  {isUnauthorized 
+                    ? 'You need to be signed in to view test results. Please log in and try again.'
+                    : `Failed to load test results: ${errorMessage}`
+                  }
+                </AlertDescription>
               </Alert>
             )}
 
@@ -133,61 +145,19 @@ export default function TestResultsLookupPage() {
 
             {testResult && (
               <div className="space-y-4">
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <div className="space-y-3">
                   <div>
                     <Label className="text-muted-foreground">Serial Number</Label>
-                    <p className="font-semibold">{testResult.serialNumber}</p>
+                    <p className="font-semibold text-lg">{testResult.serialNumber}</p>
                   </div>
                   <div>
-                    <Label className="text-muted-foreground">CTS</Label>
-                    <p className="font-semibold">{testResult.cts.toString()}</p>
-                  </div>
-                  <div>
-                    <Label className="text-muted-foreground">HIV Tests</Label>
-                    <p className="font-semibold">{testResult.hivTests.toString()}</p>
-                  </div>
-                  <div>
-                    <Label className="text-muted-foreground">Plating Tests</Label>
-                    <p className="font-semibold">{testResult.platingTests.toString()}</p>
-                  </div>
-                  <div>
-                    <Label className="text-muted-foreground">Other Tests</Label>
-                    <p className="font-semibold">{testResult.potherTests.toString()}</p>
-                  </div>
-                  <div>
-                    <Label className="text-muted-foreground">Hepatitis C</Label>
-                    <p className="font-semibold">{testResult.hepatitisC.toString()}</p>
-                  </div>
-                  <div>
-                    <Label className="text-muted-foreground">Hepatitis B</Label>
-                    <p className="font-semibold">{testResult.hepatitisB.toString()}</p>
-                  </div>
-                  <div>
-                    <Label className="text-muted-foreground">RNS</Label>
-                    <p className="font-semibold">{testResult.rns.toString()}</p>
-                  </div>
-                  <div>
-                    <Label className="text-muted-foreground">Serial Number 2</Label>
-                    <p className="font-semibold">{testResult.serialNumber2}</p>
-                  </div>
-                  <div>
-                    <Label className="text-muted-foreground">Coagulase</Label>
-                    <p className="font-semibold">{testResult.coagulase}</p>
-                  </div>
-                  <div>
-                    <Label className="text-muted-foreground">KB Disc</Label>
-                    <p className="font-semibold">{testResult.kbDisc}</p>
-                  </div>
-                  <div>
-                    <Label className="text-muted-foreground">Urine Full Exam</Label>
-                    <p className="font-semibold">{testResult.urineFullExam}</p>
-                  </div>
-                  {testResult.additionalFieldName && testResult.additionalFieldValue && (
-                    <div>
-                      <Label className="text-muted-foreground">{testResult.additionalFieldName}</Label>
-                      <p className="font-semibold">{testResult.additionalFieldValue}</p>
+                    <Label className="text-muted-foreground">Message</Label>
+                    <div className="mt-2 p-4 bg-muted/50 rounded-lg border border-border">
+                      <p className="whitespace-pre-wrap">
+                        {testResult.message || 'No message provided.'}
+                      </p>
                     </div>
-                  )}
+                  </div>
                 </div>
               </div>
             )}

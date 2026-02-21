@@ -3,14 +3,19 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import TestResultsManager from './TestResultsManager';
 import UsersUpdateSection from './UsersUpdateSection';
 import PasswordResetsSection from './PasswordResetsSection';
+import DailyGoldUpdatesManager from './DailyGoldUpdatesManager';
 import { useGetAppointments, useGetAllFeedback } from '../../hooks/useQueries';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2 } from 'lucide-react';
+import { Loader2, AlertCircle } from 'lucide-react';
+import { extractErrorMessage } from '../../utils/canisterErrors';
 
 export default function OwnerDashboardPage() {
-  const { data: appointments, isLoading: appointmentsLoading } = useGetAppointments();
-  const { data: feedback, isLoading: feedbackLoading } = useGetAllFeedback();
+  const { data: appointments, isLoading: appointmentsLoading, error: appointmentsError } = useGetAppointments();
+  const { data: feedback, isLoading: feedbackLoading, error: feedbackError } = useGetAllFeedback();
+
+  const appointmentsErrorMsg = appointmentsError ? extractErrorMessage(appointmentsError) : '';
+  const feedbackErrorMsg = feedbackError ? extractErrorMessage(feedbackError) : '';
 
   return (
     <div className="space-y-6">
@@ -20,8 +25,9 @@ export default function OwnerDashboardPage() {
       </div>
 
       <Tabs defaultValue="test-results" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 lg:grid-cols-5">
+        <TabsList className="grid w-full grid-cols-3 lg:grid-cols-6">
           <TabsTrigger value="test-results">Test Results</TabsTrigger>
+          <TabsTrigger value="daily-gold">Daily Gold Updates</TabsTrigger>
           <TabsTrigger value="appointments">Appointments</TabsTrigger>
           <TabsTrigger value="feedback">Feedback</TabsTrigger>
           <TabsTrigger value="users">Users</TabsTrigger>
@@ -30,6 +36,10 @@ export default function OwnerDashboardPage() {
 
         <TabsContent value="test-results">
           <TestResultsManager />
+        </TabsContent>
+
+        <TabsContent value="daily-gold">
+          <DailyGoldUpdatesManager />
         </TabsContent>
 
         <TabsContent value="appointments">
@@ -43,6 +53,13 @@ export default function OwnerDashboardPage() {
                 <div className="flex items-center justify-center py-8">
                   <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
                 </div>
+              ) : appointmentsError ? (
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>
+                    Failed to load appointments: {appointmentsErrorMsg}
+                  </AlertDescription>
+                </Alert>
               ) : !appointments || appointments.length === 0 ? (
                 <Alert>
                   <AlertDescription>No appointment requests yet.</AlertDescription>
@@ -52,7 +69,6 @@ export default function OwnerDashboardPage() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Serial Number</TableHead>
                         <TableHead>Test Type</TableHead>
                         <TableHead>Appointment Date</TableHead>
                         <TableHead>Request Time</TableHead>
@@ -61,7 +77,6 @@ export default function OwnerDashboardPage() {
                     <TableBody>
                       {appointments.map((appointment, index) => (
                         <TableRow key={index}>
-                          <TableCell className="font-medium">{appointment.serialNumber}</TableCell>
                           <TableCell>{appointment.testType}</TableCell>
                           <TableCell>{appointment.appointmentDate}</TableCell>
                           <TableCell>{new Date(Number(appointment.requestTime) / 1000000).toLocaleString()}</TableCell>
@@ -86,6 +101,13 @@ export default function OwnerDashboardPage() {
                 <div className="flex items-center justify-center py-8">
                   <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
                 </div>
+              ) : feedbackError ? (
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>
+                    Failed to load feedback: {feedbackErrorMsg}
+                  </AlertDescription>
+                </Alert>
               ) : !feedback || feedback.length === 0 ? (
                 <Alert>
                   <AlertDescription>No feedback submissions yet.</AlertDescription>

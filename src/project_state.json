@@ -1,6 +1,6 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 3,
+  "projectStateVersion": 9,
   "summary": "Build a free-to-access web application for Sri Sri Gold Testing Shop with owner/customer logins, appointments, test-result lookup by serial number, feedback, owner-admin dashboard for content and results management, password reset workflows, PWA installability, QR/link sharing, and UI theming based on a provided background image.",
   "architectural_notes": [
     "Role-based access control (Owner vs Customer) with protected routes/pages",
@@ -9,9 +9,12 @@
     "Test results are indexed by serial number for customer lookup/search; owner manages daily uploads/updates",
     "Owner dashboard includes live user registration feed ('users update') and management tools"
   ],
-  "known_issues": [],
-  "isFixRequest": false,
-  "imageRequirements": "## Required Images\n- Background image for app shell (shop-background.dim_1920x1080.png)\n- App icon for PWA (app-icon.dim_512x512.png)\n- App icon for PWA (app-icon.dim_192x192.png)",
+  "known_issues": [
+    "Test Results module: saving/updating a test result fails with an error (results not being saved).",
+    "Multiple modules/features are not working in the deployed application (general runtime errors across features).",
+    "User registration issue: after a user registers, the registered user is not showing/appearing (e.g., in owner 'users update' list or expected UI)."
+  ],
+  "isFixRequest": true,
   "existing_features": [
     {
       "id": "feature-implement-custom-authentication-with-two-roles-1-a-fixed-owner-account-with-username-bhanuchand-and-password-prataap-2-customer-accounts-with-registration-and-login-using-username-password-and-a-required-mobile-number-after-successful-login-show-a-welcome-section-page",
@@ -132,6 +135,118 @@
         "REQ-15"
       ],
       "version": 1
+    },
+    {
+      "id": "feature-simplify-the-owner-add-update-test-result-form-so-it-only-collects-1-serial-number-and-2-a-single-free-text-message-field-a-large-message-box-remove-hide-all-other-existing-test-result-input-fields-from-the-ui",
+      "title": "Simplify the Owner \"Add/Update Test Result\" form so it only collects (1) Serial Number and (2) a single free-text Message field (a large message box). Remove/hide all other existing test-result input fields from the UI.",
+      "reqIds": [
+        "REQ-16"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-customer-test-results-lookup-results-display-so-it-shows-only-the-serial-number-and-the-saved-message-content-and-does-not-show-the-removed-test-result-fields-boxes",
+      "title": "Update the customer Test Results Lookup results display so it shows only the Serial Number and the saved Message content (and does not show the removed test-result fields/boxes).",
+      "reqIds": [
+        "REQ-17"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-map-the-new-single-message-field-to-persisted-test-result-data-so-that-a-existing-backend-api-calls-continue-to-work-and-b-the-message-can-be-retrieved-and-displayed-in-the-customer-lookup-view",
+      "title": "Map the new single Message field to persisted test-result data so that (a) existing backend API calls continue to work and (b) the message can be retrieved and displayed in the customer lookup view.",
+      "reqIds": [
+        "REQ-18"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-new-owner-dashboard-tab-labeled-daily-gold-updates",
+      "title": "Add a new Owner Dashboard tab labeled \"Daily Gold Updates\".",
+      "reqIds": [
+        "REQ-19"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-create-a-customer-facing-page-for-daily-gold-updates-that-lists-the-updates-returned-from-the-backend-and-make-it-reachable-via-app-navigation-for-authenticated-customers",
+      "title": "Create a customer-facing page for \"Daily Gold Updates\" that lists the updates returned from the backend and make it reachable via app navigation for authenticated customers.",
+      "reqIds": [
+        "REQ-21"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-owner-ui-in-the-daily-gold-updates-dashboard-tab-to-create-update-entries-date-rate-value-notes-and-refresh-the-list-after-saving",
+      "title": "Add Owner UI in the \"Daily Gold Updates\" dashboard tab to create/update entries (date, rate/value, notes) and refresh the list after saving.",
+      "reqIds": [
+        "REQ-22"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-fix-the-test-result-save-update-mutation-so-the-canister-call-succeeds-and-the-test-result-is-actually-persisted-when-the-owner-submits-serial-number-message",
+      "title": "Fix the Test Result save/update mutation so the canister call succeeds and the test result is actually persisted when the owner submits Serial Number + Message.",
+      "reqIds": [
+        "REQ-23"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-improve-the-error-message-shown-when-saving-a-test-result-fails-so-it-includes-the-actual-error-details-returned-by-the-failed-canister-call-while-remaining-in-english",
+      "title": "Improve the error message shown when saving a test result fails so it includes the actual error details returned by the failed canister call (while remaining in English).",
+      "reqIds": [
+        "REQ-24"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-fix-authentication-authorization-so-that-all-feature-pages-test-results-lookup-feedback-submit-appointments-booking-daily-gold-updates-view-owner-dashboard-data-tabs-work-without-unauthorized-actor-not-available-runtime-errors-after-a-user-logs-in-with-the-existing-username-password-system",
+      "title": "Fix authentication/authorization so that all feature pages (Test Results lookup, Feedback submit, Appointments booking, Daily Gold Updates view, Owner Dashboard data tabs) work without “Unauthorized”/“Actor not available” runtime errors after a user logs in with the existing username/password system.",
+      "reqIds": [
+        "REQ-25"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-frontend-login-flow-frontend-src-pages-loginpage-tsx-to-call-the-new-backend-role-session-handshake-after-local-username-password-validation-succeeds-and-block-navigation-to-authenticated-pages-until-the-handshake-succeeds-showing-an-english-error-if-it-fails",
+      "title": "Update the frontend login flow (frontend/src/pages/LoginPage.tsx) to call the new backend role/session handshake after local username/password validation succeeds, and block navigation to authenticated pages until the handshake succeeds (showing an English error if it fails).",
+      "reqIds": [
+        "REQ-27"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-ensure-customer-registration-reliably-appears-for-the-owner-by-persisting-new-customers-in-the-canister-and-rendering-the-owner-users-update-list-from-canister-data-not-only-from-localstorage",
+      "title": "Ensure customer registration reliably appears for the owner by persisting new customers in the canister and rendering the Owner “Users Update” list from canister data (not only from localStorage).",
+      "reqIds": [
+        "REQ-28"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-remove-the-serial-number-field-from-the-customer-appointments-booking-form-ui-and-stop-requiring-users-to-enter-it-keep-the-appointment-submission-functional-by-sending-an-empty-string-or-a-backend-safe-placeholder-value-for-serialnumber",
+      "title": "Remove the Serial Number field from the customer Appointments booking form UI and stop requiring users to enter it; keep the appointment submission functional by sending an empty string or a backend-safe placeholder value for serialNumber.",
+      "reqIds": [
+        "REQ-29"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-remove-serial-number-from-appointment-displays-in-the-owner-dashboard-appointments-table-so-it-is-not-shown-to-the-owner-in-the-ui",
+      "title": "Remove Serial Number from appointment displays in the Owner Dashboard Appointments table so it is not shown to the owner in the UI.",
+      "reqIds": [
+        "REQ-30"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-improve-error-reporting-across-feature-mutations-and-queries-appointments-feedback-customers-to-surface-actual-canister-error-details-in-english-instead-of-generic-please-try-again-when-a-canister-call-fails",
+      "title": "Improve error reporting across feature mutations and queries (Appointments, Feedback, Customers) to surface actual canister error details in English instead of generic “Please try again” when a canister call fails.",
+      "reqIds": [
+        "REQ-31"
+      ],
+      "version": 1
     }
   ],
   "new_feature_requests": [
@@ -211,6 +326,40 @@
       "id": "AR-13",
       "summary": "Owner dashboard enhancements: add edit option and ability to add another column in dashboard data tables/forms",
       "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-14",
+      "summary": "Test Results UI change: keep Serial No field; remove the remaining input boxes and show only a single message box/field instead",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-15",
+      "summary": "Add a new tab/section for 'Daily Gold Updates'",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-20",
+      "summary": "Implement backend storage and APIs for Daily Gold Updates so the Owner can create/update daily entries and authenticated users can view them.",
+      "reqIds": [
+        "REQ-20"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-21",
+      "summary": "Appointments module UI change: remove Serial No field from appointment booking/request form (and any related appointment views)",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-23",
+      "summary": "Add backend role/session handshake APIs in backend/main.mo so the frontend can register the current caller principal as either an Owner (admin) or Customer (user) based on the existing username/password flow, enabling AccessControl checks to pass for subsequent canister calls.",
+      "reqIds": [
+        "REQ-26"
+      ],
       "status": "pending"
     }
   ],

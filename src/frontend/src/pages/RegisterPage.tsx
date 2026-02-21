@@ -7,8 +7,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertCircle, Loader2 } from 'lucide-react';
+import { AlertCircle, Loader2, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { extractErrorMessage } from '../utils/canisterErrors';
 
 export default function RegisterPage() {
   const navigate = useNavigate();
@@ -42,13 +43,7 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      const success = await registerCustomer(form.username, form.password, form.mobileNumber);
-      if (!success) {
-        setError('Username already exists');
-        setLoading(false);
-        return;
-      }
-
+      // First, save to backend canister (source of truth)
       await addCustomerMutation.mutateAsync({
         username: form.username,
         password: form.password,
@@ -56,10 +51,19 @@ export default function RegisterPage() {
         email: form.email,
       });
 
+      // Only after backend success, update localStorage
+      const success = await registerCustomer(form.username, form.password, form.mobileNumber);
+      if (!success) {
+        setError('Username already exists locally');
+        setLoading(false);
+        return;
+      }
+
       toast.success('Registration successful! Please log in.');
       navigate({ to: '/login' });
     } catch (err) {
-      setError('Registration failed. Please try again.');
+      const errorMsg = extractErrorMessage(err);
+      setError(`Registration failed: ${errorMsg}`);
     } finally {
       setLoading(false);
     }
@@ -140,8 +144,8 @@ export default function RegisterPage() {
             </Button>
           </form>
         </CardContent>
-        <CardFooter className="flex justify-center">
-          <div className="text-sm text-center text-muted-foreground">
+        <CardFooter className="text-center">
+          <div className="text-sm text-muted-foreground w-full">
             Already have an account?{' '}
             <Link to="/login" className="text-amber-600 hover:text-amber-700 font-medium">
               Sign in here

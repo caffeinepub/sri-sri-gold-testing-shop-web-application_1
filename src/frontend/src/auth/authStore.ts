@@ -8,9 +8,12 @@ interface AuthState {
   isAuthenticated: boolean;
   username: string | null;
   role: 'owner' | 'customer' | null;
+  handshakeComplete: boolean;
   login: (username: string, password: string) => Promise<boolean>;
   logout: () => void;
   registerCustomer: (username: string, password: string, mobileNumber: string) => Promise<boolean>;
+  setHandshakeComplete: (complete: boolean) => void;
+  clearHandshake: () => void;
 }
 
 export const useAuth = create<AuthState>()(
@@ -19,9 +22,10 @@ export const useAuth = create<AuthState>()(
       isAuthenticated: false,
       username: null,
       role: null,
+      handshakeComplete: false,
       login: async (username: string, password: string) => {
         if (username === OWNER_USERNAME && password === OWNER_PASSWORD) {
-          set({ isAuthenticated: true, username, role: 'owner' });
+          set({ isAuthenticated: true, username, role: 'owner', handshakeComplete: false });
           return true;
         }
         
@@ -32,14 +36,14 @@ export const useAuth = create<AuthState>()(
             (c: any) => c.username === username && c.password === password
           );
           if (customer) {
-            set({ isAuthenticated: true, username, role: 'customer' });
+            set({ isAuthenticated: true, username, role: 'customer', handshakeComplete: false });
             return true;
           }
         }
         return false;
       },
       logout: () => {
-        set({ isAuthenticated: false, username: null, role: null });
+        set({ isAuthenticated: false, username: null, role: null, handshakeComplete: false });
       },
       registerCustomer: async (username: string, password: string, mobileNumber: string) => {
         const storedCustomers = localStorage.getItem('customers');
@@ -52,6 +56,12 @@ export const useAuth = create<AuthState>()(
         customers.push({ username, password, mobileNumber, registrationDate: Date.now() });
         localStorage.setItem('customers', JSON.stringify(customers));
         return true;
+      },
+      setHandshakeComplete: (complete: boolean) => {
+        set({ handshakeComplete: complete });
+      },
+      clearHandshake: () => {
+        set({ handshakeComplete: false });
       },
     }),
     {

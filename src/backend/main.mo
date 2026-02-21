@@ -57,8 +57,11 @@ actor {
   var appointmentRequests : [AppointmentRequest] = [];
   var resetPasscodes : [(Text, Text)] = [];
   var pendingPasswordResets : [(Text, (Text, Time.Time))] = [];
+  let dailyGoldUpdates = Map.empty<Text, Text>();
   let customers = Map.empty<Text, Customer>();
   let userProfiles = Map.empty<Principal, UserProfile>();
+  let usernameToPrincipal = Map.empty<Text, Principal>();
+  let ownerCredentials = Map.empty<Text, Text>();
 
   type Customer = {
     username : Text;
@@ -83,6 +86,7 @@ actor {
     urineFullExam : Text;
     additionalFieldName : ?Text;
     additionalFieldValue : ?Text;
+    message : Text;
   };
 
   type FeedbackEntry = {
@@ -120,6 +124,52 @@ actor {
       Runtime.trap("Unauthorized: Only users can save profiles");
     };
     userProfiles.add(caller, profile);
+  };
+
+  public shared ({ caller }) func registerAsCustomer(username : Text, password : Text) : async Bool {
+    switch (customers.get(username)) {
+      case (?customer) {
+        if (customer.password == password) {
+          usernameToPrincipal.add(username, caller);
+          AccessControl.assignRole(accessControlState, caller, caller, #user);
+          true;
+        } else {
+          false;
+        };
+      };
+      case (null) { false };
+    };
+  };
+
+  public shared ({ caller }) func registerAsOwner(username : Text, password : Text) : async Bool {
+    switch (ownerCredentials.get(username)) {
+      case (?storedPassword) {
+        if (storedPassword == password) {
+          usernameToPrincipal.add(username, caller);
+          AccessControl.assignRole(accessControlState, caller, caller, #admin);
+          true;
+        } else {
+          false;
+        };
+      };
+      case (null) { false };
+    };
+  };
+
+  public shared ({ caller }) func createOwnerAccount(username : Text, password : Text) : async () {
+    if (not (AccessControl.isAdmin(accessControlState, caller))) {
+      Runtime.trap("Unauthorized: Only admins can create owner accounts");
+    };
+    ownerCredentials.add(username, password);
+  };
+
+  public shared ({ caller }) func initializeDefaultOwner(username : Text, password : Text) : async () {
+    if (ownerCredentials.size() == 0) {
+      ownerCredentials.add(username, password);
+      AccessControl.assignRole(accessControlState, caller, caller, #admin);
+    } else {
+      Runtime.trap("Default owner already initialized");
+    };
   };
 
   public shared ({ caller }) func addCustomer(username : Text, password : Text, mobileNumber : Text, email : Text) : async () {
@@ -163,6 +213,7 @@ actor {
     urineFullExam : Text,
     additionalFieldName : ?Text,
     additionalFieldValue : ?Text,
+    message : Text,
   ) : async () {
     if (not (AccessControl.isAdmin(accessControlState, caller))) {
       Runtime.trap("Unauthorized: Only admins can update test results");
@@ -182,6 +233,7 @@ actor {
       urineFullExam;
       additionalFieldName;
       additionalFieldValue;
+      message;
     };
     testResultsArray := testResultsArray.filter(func(result) { result.serialNumber != serialNumber });
     testResultsArray := testResultsArray.concat([newResult]);
@@ -275,14 +327,53 @@ actor {
   public shared ({ caller }) func finalizePasswordReset(mobileNumber : Text) : async Bool {
     switch (pendingPasswordResets.find(func((number, _)) { number == mobileNumber })) {
       case (?found) {
-        let (_, timestamp) = found.1;
+        let (newPassword, timestamp) = found.1;
         let now = Time.now();
-        let fiveMinutes = 300_000_000_000; // 5 minutes in 100 ns
-        let allowedTime = timestamp + fiveMinutes;
-        pendingPasswordResets := pendingPasswordResets.filter(func((number, _)) { number != mobileNumber });
-        now >= allowedTime;
+        let fiveMinutes = 300_000_000_000;
+        if (now <= timestamp + fiveMinutes) {
+          let customersArray = customers.toArray();
+          for ((username, customer) in customersArray.vals()) {
+            if (customer.mobileNumber == mobileNumber) {
+              let updatedCustomer : Customer = {
+                username = customer.username;
+                password = newPassword;
+                mobileNumber = customer.mobileNumber;
+                email = customer.email;
+                registrationDate = customer.registrationDate;
+              };
+              customers.add(username, updatedCustomer);
+            };
+          };
+          pendingPasswordResets := pendingPasswordResets.filter(func((number, _)) { number != mobileNumber });
+          resetPasscodes := resetPasscodes.filter(func((number, _)) { number != mobileNumber });
+          true;
+        } else {
+          pendingPasswordResets := pendingPasswordResets.filter(func((number, _)) { number != mobileNumber });
+          false;
+        };
       };
       case (null) { false };
     };
+  };
+
+  public shared ({ caller }) func setDailyGoldUpdate(date : Text, content : Text) : async () {
+    if (not (AccessControl.isAdmin(accessControlState, caller))) {
+      Runtime.trap("Unauthorized: Only admins can set daily gold updates");
+    };
+    dailyGoldUpdates.add(date, content);
+  };
+
+  public query ({ caller }) func getDailyGoldUpdate(date : Text) : async ?Text {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only authenticated users can view daily gold updates");
+    };
+    dailyGoldUpdates.get(date);
+  };
+
+  public query ({ caller }) func getAllDailyGoldUpdates() : async [(Text, Text)] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only authenticated users can view daily gold updates");
+    };
+    dailyGoldUpdates.toArray();
   };
 };

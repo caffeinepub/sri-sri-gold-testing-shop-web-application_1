@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { CheckCircle2, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { extractErrorMessage } from '../utils/canisterErrors';
 
 export default function FeedbackPage() {
   const { username } = useAuth();
@@ -34,7 +35,8 @@ export default function FeedbackPage() {
       
       setTimeout(() => setSubmitted(false), 3000);
     } catch (error) {
-      toast.error('Failed to submit feedback. Please try again.');
+      const errorMsg = extractErrorMessage(error);
+      toast.error(`Failed to submit feedback: ${errorMsg}`);
     }
   };
 

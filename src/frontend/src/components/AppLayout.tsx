@@ -2,7 +2,7 @@ import { ReactNode } from 'react';
 import { Link, useNavigate } from '@tanstack/react-router';
 import { useAuth } from '../auth/authStore';
 import { Button } from '@/components/ui/button';
-import { Menu, X, LogOut, Home, Info, MessageSquare, Calendar, FileText, Settings, LayoutDashboard } from 'lucide-react';
+import { Menu, X, LogOut, Home, Info, MessageSquare, Calendar, FileText, Settings, LayoutDashboard, TrendingUp } from 'lucide-react';
 import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -80,6 +80,12 @@ export default function AppLayout({ children }: AppLayoutProps) {
                         <Button variant="ghost" size="sm">
                           <FileText className="w-4 h-4 mr-2" />
                           Test Results
+                        </Button>
+                      </Link>
+                      <Link to="/daily-gold-updates">
+                        <Button variant="ghost" size="sm">
+                          <TrendingUp className="w-4 h-4 mr-2" />
+                          Daily Gold Updates
                         </Button>
                       </Link>
                       <Link to="/appointments">
@@ -169,6 +175,12 @@ export default function AppLayout({ children }: AppLayoutProps) {
                         <Button variant="ghost" size="sm" className="w-full justify-start">
                           <FileText className="w-4 h-4 mr-2" />
                           Test Results
+                        </Button>
+                      </Link>
+                      <Link to="/daily-gold-updates" onClick={() => setMobileMenuOpen(false)}>
+                        <Button variant="ghost" size="sm" className="w-full justify-start">
+                          <TrendingUp className="w-4 h-4 mr-2" />
+                          Daily Gold Updates
                         </Button>
                       </Link>
                       <Link to="/appointments" onClick={() => setMobileMenuOpen(false)}>

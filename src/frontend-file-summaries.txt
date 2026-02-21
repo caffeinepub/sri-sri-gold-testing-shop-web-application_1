@@ -1,3 +1,18 @@
 {
-  "frontend/src/components/ShareAppLinkCard.tsx": "Reusable card component displaying current app URL with copy-to-clipboard button and QR code generated via external API service (qrserver.com) for easy sharing via WhatsApp/text/scan."
+  "frontend/src/components/ShareAppLinkCard.tsx": "Reusable card component displaying current app URL with copy-to-clipboard button and QR code generated via external API service (qrserver.com) for easy sharing via WhatsApp/text/scan.",
+  "frontend/src/pages/owner/TestResultsManager.tsx": "Owner test results management component with enhanced error handling that logs full errors and displays meaningful error messages using the canister error utility.",
+  "frontend/src/pages/TestResultsLookupPage.tsx": "Test results lookup page with enhanced error handling that detects unauthorized errors and prompts users to sign in.",
+  "frontend/src/hooks/useQueries.ts": "React Query hooks for all backend operations with retry disabled for auth-protected queries and customer mutation invalidating customers query.",
+  "frontend/src/pages/owner/DailyGoldUpdatesManager.tsx": "Owner dashboard component for managing daily gold rate updates with form input and table display of all saved updates.",
+  "frontend/src/pages/owner/OwnerDashboardPage.tsx": "Owner dashboard with appointments table (serial number column removed) and feedback list, both with enhanced error handling and extracted error messages.",
+  "frontend/src/pages/DailyGoldUpdatesPage.tsx": "Customer-facing daily gold updates page with enhanced error handling that detects unauthorized errors and provides sign-in guidance.",
+  "frontend/src/components/AppLayout.tsx": "Main application layout with header navigation (including Daily Gold Updates link for customers), mobile menu, and footer with role-based menu items.",
+  "frontend/src/App.tsx": "Root app component with router configuration requiring both authentication and handshakeComplete state for protected routes.",
+  "frontend/src/utils/canisterErrors.ts": "Enhanced utility function to extract readable error messages from various canister/agent error shapes including reject text patterns and nested causes.",
+  "frontend/src/auth/authStore.ts": "Zustand auth store with local credential validation and backend handshake state tracking (handshakeComplete flag and setters) for role-based access control.",
+  "frontend/src/pages/LoginPage.tsx": "Login page with customer/owner tabs that performs local validation followed by backend handshake (registerAsCustomer/registerAsOwner) before navigation, with detailed error handling.",
+  "frontend/src/pages/RegisterPage.tsx": "Registration page that saves customer data to backend canister first (source of truth), then updates localStorage only after backend success, with extracted error messaging.",
+  "frontend/src/pages/AppointmentsPage.tsx": "Appointment booking page without serial number field, submitting empty string as placeholder, with enhanced error extraction and display.",
+  "frontend/src/pages/FeedbackPage.tsx": "Customer feedback submission page with enhanced error handling using canister error extraction utility.",
+  "frontend/src/pages/owner/UsersUpdateSection.tsx": "Owner users management component fetching customers from canister via React Query with manual refresh and enhanced error handling."
 }

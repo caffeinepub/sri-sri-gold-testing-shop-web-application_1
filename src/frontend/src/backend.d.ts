@@ -37,6 +37,7 @@ export interface TestResult {
     hepatitisC: bigint;
     kbDisc: string;
     serialNumber: string;
+    message: string;
     additionalFieldValue?: string;
     platingTests: bigint;
     coagulase: string;
@@ -52,20 +53,27 @@ export interface backendInterface {
     addFeedbackEntry(feedback: string, customerFirstName: string): Promise<void>;
     addResetPasscode(mobileNumber: string, passcode: string): Promise<void>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
+    createOwnerAccount(username: string, password: string): Promise<void>;
     finalizePasswordReset(mobileNumber: string): Promise<boolean>;
     getAllCustomersPublicView(): Promise<Array<CustomerPublicView>>;
+    getAllDailyGoldUpdates(): Promise<Array<[string, string]>>;
     getAllEntries(): Promise<Array<FeedbackEntry>>;
     getAppointments(): Promise<Array<AppointmentRequest>>;
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole>;
     getContent(section: string): Promise<string>;
     getCustomerCount(): Promise<bigint>;
+    getDailyGoldUpdate(date: string): Promise<string | null>;
     getTestResult(serialNumber: string): Promise<TestResult | null>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
+    initializeDefaultOwner(username: string, password: string): Promise<void>;
     isCallerAdmin(): Promise<boolean>;
+    registerAsCustomer(username: string, password: string): Promise<boolean>;
+    registerAsOwner(username: string, password: string): Promise<boolean>;
     requestPasswordReset(mobileNumber: string, newPassword: string): Promise<void>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
+    setDailyGoldUpdate(date: string, content: string): Promise<void>;
     updateContent(section: string, content: string): Promise<void>;
-    updateTestResult(serialNumber: string, cts: bigint, hivTests: bigint, platingTests: bigint, potherTests: bigint, hepatitisC: bigint, hepatitisB: bigint, rns: bigint, serialNumber2: string, coagulase: string, kbDisc: string, urineFullExam: string, additionalFieldName: string | null, additionalFieldValue: string | null): Promise<void>;
+    updateTestResult(serialNumber: string, cts: bigint, hivTests: bigint, platingTests: bigint, potherTests: bigint, hepatitisC: bigint, hepatitisB: bigint, rns: bigint, serialNumber2: string, coagulase: string, kbDisc: string, urineFullExam: string, additionalFieldName: string | null, additionalFieldValue: string | null, message: string): Promise<void>;
     verifyResetPasscode(mobileNumber: string, passcode: string): Promise<boolean>;
 }

@@ -119,6 +119,7 @@ export interface TestResult {
     hepatitisC: bigint;
     kbDisc: string;
     serialNumber: string;
+    message: string;
     additionalFieldValue?: string;
     platingTests: bigint;
     coagulase: string;
@@ -135,21 +136,28 @@ export interface backendInterface {
     addFeedbackEntry(feedback: string, customerFirstName: string): Promise<void>;
     addResetPasscode(mobileNumber: string, passcode: string): Promise<void>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
+    createOwnerAccount(username: string, password: string): Promise<void>;
     finalizePasswordReset(mobileNumber: string): Promise<boolean>;
     getAllCustomersPublicView(): Promise<Array<CustomerPublicView>>;
+    getAllDailyGoldUpdates(): Promise<Array<[string, string]>>;
     getAllEntries(): Promise<Array<FeedbackEntry>>;
     getAppointments(): Promise<Array<AppointmentRequest>>;
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole>;
     getContent(section: string): Promise<string>;
     getCustomerCount(): Promise<bigint>;
+    getDailyGoldUpdate(date: string): Promise<string | null>;
     getTestResult(serialNumber: string): Promise<TestResult | null>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
+    initializeDefaultOwner(username: string, password: string): Promise<void>;
     isCallerAdmin(): Promise<boolean>;
+    registerAsCustomer(username: string, password: string): Promise<boolean>;
+    registerAsOwner(username: string, password: string): Promise<boolean>;
     requestPasswordReset(mobileNumber: string, newPassword: string): Promise<void>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
+    setDailyGoldUpdate(date: string, content: string): Promise<void>;
     updateContent(section: string, content: string): Promise<void>;
-    updateTestResult(serialNumber: string, cts: bigint, hivTests: bigint, platingTests: bigint, potherTests: bigint, hepatitisC: bigint, hepatitisB: bigint, rns: bigint, serialNumber2: string, coagulase: string, kbDisc: string, urineFullExam: string, additionalFieldName: string | null, additionalFieldValue: string | null): Promise<void>;
+    updateTestResult(serialNumber: string, cts: bigint, hivTests: bigint, platingTests: bigint, potherTests: bigint, hepatitisC: bigint, hepatitisB: bigint, rns: bigint, serialNumber2: string, coagulase: string, kbDisc: string, urineFullExam: string, additionalFieldName: string | null, additionalFieldValue: string | null, message: string): Promise<void>;
     verifyResetPasscode(mobileNumber: string, passcode: string): Promise<boolean>;
 }
 import type { TestResult as _TestResult, UserProfile as _UserProfile, UserRole as _UserRole } from "./declarations/backend.did.d.ts";
@@ -239,6 +247,20 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async createOwnerAccount(arg0: string, arg1: string): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.createOwnerAccount(arg0, arg1);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.createOwnerAccount(arg0, arg1);
+            return result;
+        }
+    }
     async finalizePasswordReset(arg0: string): Promise<boolean> {
         if (this.processError) {
             try {
@@ -264,6 +286,20 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.getAllCustomersPublicView();
+            return result;
+        }
+    }
+    async getAllDailyGoldUpdates(): Promise<Array<[string, string]>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getAllDailyGoldUpdates();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getAllDailyGoldUpdates();
             return result;
         }
     }
@@ -351,18 +387,32 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async getTestResult(arg0: string): Promise<TestResult | null> {
+    async getDailyGoldUpdate(arg0: string): Promise<string | null> {
         if (this.processError) {
             try {
-                const result = await this.actor.getTestResult(arg0);
+                const result = await this.actor.getDailyGoldUpdate(arg0);
                 return from_candid_opt_n6(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.getTestResult(arg0);
+            const result = await this.actor.getDailyGoldUpdate(arg0);
             return from_candid_opt_n6(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getTestResult(arg0: string): Promise<TestResult | null> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getTestResult(arg0);
+                return from_candid_opt_n7(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getTestResult(arg0);
+            return from_candid_opt_n7(this._uploadFile, this._downloadFile, result);
         }
     }
     async getUserProfile(arg0: Principal): Promise<UserProfile | null> {
@@ -379,6 +429,20 @@ export class Backend implements backendInterface {
             return from_candid_opt_n3(this._uploadFile, this._downloadFile, result);
         }
     }
+    async initializeDefaultOwner(arg0: string, arg1: string): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.initializeDefaultOwner(arg0, arg1);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.initializeDefaultOwner(arg0, arg1);
+            return result;
+        }
+    }
     async isCallerAdmin(): Promise<boolean> {
         if (this.processError) {
             try {
@@ -390,6 +454,34 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.isCallerAdmin();
+            return result;
+        }
+    }
+    async registerAsCustomer(arg0: string, arg1: string): Promise<boolean> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.registerAsCustomer(arg0, arg1);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.registerAsCustomer(arg0, arg1);
+            return result;
+        }
+    }
+    async registerAsOwner(arg0: string, arg1: string): Promise<boolean> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.registerAsOwner(arg0, arg1);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.registerAsOwner(arg0, arg1);
             return result;
         }
     }
@@ -421,6 +513,20 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async setDailyGoldUpdate(arg0: string, arg1: string): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.setDailyGoldUpdate(arg0, arg1);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.setDailyGoldUpdate(arg0, arg1);
+            return result;
+        }
+    }
     async updateContent(arg0: string, arg1: string): Promise<void> {
         if (this.processError) {
             try {
@@ -435,17 +541,17 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async updateTestResult(arg0: string, arg1: bigint, arg2: bigint, arg3: bigint, arg4: bigint, arg5: bigint, arg6: bigint, arg7: bigint, arg8: string, arg9: string, arg10: string, arg11: string, arg12: string | null, arg13: string | null): Promise<void> {
+    async updateTestResult(arg0: string, arg1: bigint, arg2: bigint, arg3: bigint, arg4: bigint, arg5: bigint, arg6: bigint, arg7: bigint, arg8: string, arg9: string, arg10: string, arg11: string, arg12: string | null, arg13: string | null, arg14: string): Promise<void> {
         if (this.processError) {
             try {
-                const result = await this.actor.updateTestResult(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, to_candid_opt_n10(this._uploadFile, this._downloadFile, arg12), to_candid_opt_n10(this._uploadFile, this._downloadFile, arg13));
+                const result = await this.actor.updateTestResult(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, to_candid_opt_n10(this._uploadFile, this._downloadFile, arg12), to_candid_opt_n10(this._uploadFile, this._downloadFile, arg13), arg14);
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.updateTestResult(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, to_candid_opt_n10(this._uploadFile, this._downloadFile, arg12), to_candid_opt_n10(this._uploadFile, this._downloadFile, arg13));
+            const result = await this.actor.updateTestResult(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, to_candid_opt_n10(this._uploadFile, this._downloadFile, arg12), to_candid_opt_n10(this._uploadFile, this._downloadFile, arg13), arg14);
             return result;
         }
     }
@@ -464,8 +570,8 @@ export class Backend implements backendInterface {
         }
     }
 }
-function from_candid_TestResult_n7(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _TestResult): TestResult {
-    return from_candid_record_n8(_uploadFile, _downloadFile, value);
+function from_candid_TestResult_n8(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _TestResult): TestResult {
+    return from_candid_record_n9(_uploadFile, _downloadFile, value);
 }
 function from_candid_UserRole_n4(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _UserRole): UserRole {
     return from_candid_variant_n5(_uploadFile, _downloadFile, value);
@@ -473,13 +579,13 @@ function from_candid_UserRole_n4(_uploadFile: (file: ExternalBlob) => Promise<Ui
 function from_candid_opt_n3(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_UserProfile]): UserProfile | null {
     return value.length === 0 ? null : value[0];
 }
-function from_candid_opt_n6(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_TestResult]): TestResult | null {
-    return value.length === 0 ? null : from_candid_TestResult_n7(_uploadFile, _downloadFile, value[0]);
-}
-function from_candid_opt_n9(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [string]): string | null {
+function from_candid_opt_n6(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [string]): string | null {
     return value.length === 0 ? null : value[0];
 }
-function from_candid_record_n8(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+function from_candid_opt_n7(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_TestResult]): TestResult | null {
+    return value.length === 0 ? null : from_candid_TestResult_n8(_uploadFile, _downloadFile, value[0]);
+}
+function from_candid_record_n9(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     cts: bigint;
     rns: bigint;
     serialNumber2: string;
@@ -491,6 +597,7 @@ function from_candid_record_n8(_uploadFile: (file: ExternalBlob) => Promise<Uint
     hepatitisC: bigint;
     kbDisc: string;
     serialNumber: string;
+    message: string;
     additionalFieldValue: [] | [string];
     platingTests: bigint;
     coagulase: string;
@@ -506,6 +613,7 @@ function from_candid_record_n8(_uploadFile: (file: ExternalBlob) => Promise<Uint
     hepatitisC: bigint;
     kbDisc: string;
     serialNumber: string;
+    message: string;
     additionalFieldValue?: string;
     platingTests: bigint;
     coagulase: string;
@@ -517,12 +625,13 @@ function from_candid_record_n8(_uploadFile: (file: ExternalBlob) => Promise<Uint
         urineFullExam: value.urineFullExam,
         hivTests: value.hivTests,
         potherTests: value.potherTests,
-        additionalFieldName: record_opt_to_undefined(from_candid_opt_n9(_uploadFile, _downloadFile, value.additionalFieldName)),
+        additionalFieldName: record_opt_to_undefined(from_candid_opt_n6(_uploadFile, _downloadFile, value.additionalFieldName)),
         hepatitisB: value.hepatitisB,
         hepatitisC: value.hepatitisC,
         kbDisc: value.kbDisc,
         serialNumber: value.serialNumber,
-        additionalFieldValue: record_opt_to_undefined(from_candid_opt_n9(_uploadFile, _downloadFile, value.additionalFieldValue)),
+        message: value.message,
+        additionalFieldValue: record_opt_to_undefined(from_candid_opt_n6(_uploadFile, _downloadFile, value.additionalFieldValue)),
         platingTests: value.platingTests,
         coagulase: value.coagulase
     };

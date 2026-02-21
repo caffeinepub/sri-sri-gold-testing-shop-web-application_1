@@ -1,508 +1,149 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Sri Sri Gold Testing Shop web app — frontend plan (auth UI, dashboard modules, PWA, QR, theme/background)",
+  "title": "Repair auth handshake flows, fix canister-backed user visibility, and remove appointment serial number UI",
   "requirements": [
     {
-      "id": "REQ-1",
-      "summary": "Add owner/customer authentication UI (fixed owner creds, customer register/login) with role-aware welcome and protected navigation.",
+      "id": "REQ-25",
+      "summary": "Prevent post-login runtime failures by ensuring canister calls are made only after role/session is established and by surfacing clear unauthorized/actor errors across feature pages.",
       "acceptanceCriteria": [
-        "Owner can log in using exactly the provided credentials and is routed to an Owner Dashboard.",
-        "Customer can register with username, mobile number, and password; then log in with username + password.",
-        "After login, the user sees a welcome section that clearly indicates they are logged in (and whether they are Owner or Customer).",
-        "Unauthenticated users cannot access post-login pages (dashboard, feedback, appointments, results)."
+        "After successful Customer login, the following actions work end-to-end without throwing runtime errors: (1) lookup test result by serial number, (2) submit feedback, (3) submit an appointment request, (4) view Daily Gold Updates.",
+        "After successful Owner login, Owner Dashboard tabs load without runtime errors: Appointments list, Feedback list, Users list, Test Results manager, Daily Gold Updates manager.",
+        "If the backend rejects a call due to authorization, the UI shows a clear English error message explaining the user needs to sign in properly (not a blank screen or generic failure)."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/App.tsx",
-          "operation": "create",
-          "description": "Create the app shell with route wiring for public (Login/Shop Info) and protected areas (Welcome, Customer pages, Owner Dashboard). Include guarded routing that blocks access to protected routes when not authenticated, and routes Owner to the Owner Dashboard after login."
+          "path": "frontend/src/hooks/useQueries.ts",
+          "operation": "modify",
+          "description": "Harden React Query hooks to avoid \"Actor not available\" and authorization-related runtime errors by ensuring queries/mutations are appropriately gated and by propagating detailed errors (use frontend-side handling compatible with the selected \"authorization\" component’s role-based access control model). Verify the component's usage instructions before implementing."
         },
+        {
+          "path": "frontend/src/pages/TestResultsLookupPage.tsx",
+          "operation": "modify",
+          "description": "Replace generic query error UI with detailed English error messaging (including unauthorized/sign-in guidance) using the shared canister error extraction utility, so lookup failures never present as blank/generic failures. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/DailyGoldUpdatesPage.tsx",
+          "operation": "modify",
+          "description": "Improve query error UI to show extracted canister error details in English and explicitly instruct users to sign in properly when authorization fails, preventing confusing generic error states. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/owner/OwnerDashboardPage.tsx",
+          "operation": "modify",
+          "description": "Add explicit error states for Appointments/Feedback data loading and show extracted canister error details in English (including unauthorized/sign-in guidance) so all dashboard tabs fail gracefully rather than throwing runtime errors. Verify the component's usage instructions before implementing."
+        }
+      ]
+    },
+    {
+      "id": "REQ-27",
+      "summary": "Update the login flow to perform a backend role/session handshake after local username/password validation and block navigation until handshake succeeds.",
+      "acceptanceCriteria": [
+        "Customer login: on successful local credential validation, the app calls the backend customer-session handshake; only then navigates to /welcome.",
+        "Owner login: on successful local credential validation, the app calls the backend owner-session handshake; only then navigates to /owner-dashboard.",
+        "If the handshake fails, the user stays on the login page and sees an English error explaining sign-in could not be completed."
+      ],
+      "file_operations": [
         {
           "path": "frontend/src/auth/authStore.ts",
-          "operation": "create",
-          "description": "Implement a small client auth/session store for username/password entry, fixed Owner credentials validation (Username: Bhanuchand, Password: Prataap), and storing the current session (role + username) in browser storage. Ensure logout clears cached data and session state. Use this store as the source-of-truth for route guards."
-        },
-        {
-          "path": "frontend/src/auth/ProtectedRoute.tsx",
-          "operation": "create",
-          "description": "Create a reusable route guard component for protected pages (dashboard, feedback, appointments, results). If not authenticated, redirect to Login; if authenticated but wrong role, show an Access Denied view. Use the selected authorization component concepts for role-based access UI; verify the component's usage instructions before implementing."
+          "operation": "modify",
+          "description": "Extend the auth store to track handshake/session establishment state (e.g., \"handshakeComplete\" and a setter/clearer) so the router and pages can block protected navigation until the backend role/session is confirmed (aligned with the selected \"authorization\" component’s RBAC expectations). Verify the component's usage instructions before implementing."
         },
         {
           "path": "frontend/src/pages/LoginPage.tsx",
-          "operation": "create",
-          "description": "Implement login UI with tabs/sections for Owner login and Customer login, plus a link to Customer Registration and Forgot Password. After success, route to Welcome (customer) or Owner Dashboard (owner). Keep all user-facing strings in English."
+          "operation": "modify",
+          "description": "After local username/password validation succeeds, call the backend role/session handshake (customer vs owner) via the authenticated actor; only navigate on success; otherwise remain on the login page with an English error and clear any partial auth state. Verify the component's usage instructions before implementing."
         },
+        {
+          "path": "frontend/src/App.tsx",
+          "operation": "modify",
+          "description": "Tighten protected-route guards to require both local authentication and successful backend handshake state before allowing access to feature pages and owner dashboard, redirecting to /login with a clear sign-in requirement when missing. Verify the component's usage instructions before implementing."
+        }
+      ]
+    },
+    {
+      "id": "REQ-28",
+      "summary": "Render Owner “Users Update” from canister-backed customer data and ensure registration success/failure reflects canister persistence.",
+      "acceptanceCriteria": [
+        "After a customer registers in frontend/src/pages/RegisterPage.tsx, the customer record is saved in the backend canister and the UI shows an English success state (or a detailed English failure reason if the canister call fails).",
+        "Owner Dashboard “Users Update” shows customers fetched from the canister and updates after a refresh (or automatically via React Query invalidation).",
+        "The owner can see at least: username, mobile number, and registration date for each registered customer from the canister data."
+      ],
+      "file_operations": [
         {
           "path": "frontend/src/pages/RegisterPage.tsx",
-          "operation": "create",
-          "description": "Implement customer registration UI requiring username, mobile number, and password (and any extra required backend field if present). On successful registration, route to login or auto-login per UX decision and ensure the session is established."
+          "operation": "modify",
+          "description": "Reorder registration to treat the canister write as the source of truth: call the canister customer-create flow first, show an English success state only after it succeeds, and show extracted English error details when it fails; ensure localStorage-based customer cache is updated only after canister success to avoid owner/user mismatch. Verify the component's usage instructions before implementing."
         },
         {
-          "path": "frontend/src/pages/WelcomePage.tsx",
-          "operation": "create",
-          "description": "Create a post-login Welcome page/section that clearly indicates the user is logged in and displays whether they are Owner or Customer, plus quick links/cards to key modules."
+          "path": "frontend/src/pages/owner/UsersUpdateSection.tsx",
+          "operation": "modify",
+          "description": "Replace localStorage-only customer loading with canister-backed fetching via existing React Query hooks, add manual refresh via query invalidation/refetch, and render at least username/mobile number/registration date from canister data (handle missing date defensively if backend returns it as an optional field). Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/hooks/useQueries.ts",
+          "operation": "modify",
+          "description": "Ensure customer-related mutations invalidate/refetch the canister-backed customers query so Owner Dashboard updates after registration (or after a manual refresh) without relying on localStorage. Verify the component's usage instructions before implementing."
         }
       ]
     },
     {
-      "id": "REQ-2",
-      "summary": "Create Shop Info screen visible pre-login and also accessible post-login, with exact shop details.",
+      "id": "REQ-29",
+      "summary": "Remove Serial Number input from customer appointment booking form while keeping submission functional with a backend-safe placeholder value.",
       "acceptanceCriteria": [
-        "The Shop Info screen displays the exact address, both phone numbers, and the exact timings string.",
-        "Shop Info content is readable on mobile and desktop."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/pages/ShopInfoPage.tsx",
-          "operation": "create",
-          "description": "Create a Shop Info view showing address \"Opposite cloth complex, Kadapa main road, Mydukur\", contact numbers \"7893552706\" and \"9701758114\", and timings \"9:00 AM to 8:00 PM\". Include responsive layout for mobile/desktop and make it reachable both pre-login and post-login via navigation."
-        },
-        {
-          "path": "frontend/src/App.tsx",
-          "operation": "modify",
-          "description": "Wire Shop Info route into the router and ensure it is reachable from both the public area (pre-login) and from the authenticated shell navigation."
-        }
-      ]
-    },
-    {
-      "id": "REQ-3",
-      "summary": "Add owner-editable content blocks (welcome/shop info text) managed from Owner Dashboard and displayed to customers.",
-      "acceptanceCriteria": [
-        "Owner Dashboard includes a section to edit and save page content.",
-        "Saved content persists across refreshes and is visible to customers on relevant pages.",
-        "Non-owner users cannot edit page content."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/pages/owner/OwnerDashboardPage.tsx",
-          "operation": "create",
-          "description": "Create the Owner Dashboard with a section to edit content blocks (e.g., welcome message, shop info text blocks). Ensure only Owner can access this page (via role guard). Use shadcn-ui composed components (cards, tabs, inputs, buttons) without modifying immutable ui files; verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/services/contentService.ts",
-          "operation": "create",
-          "description": "Add a thin frontend service that calls backend capabilities for getting/saving content by section key (e.g., welcome, shopInfo). Handle errors and show success/failure states in the UI."
-        },
-        {
-          "path": "frontend/src/pages/WelcomePage.tsx",
-          "operation": "modify",
-          "description": "Render the editable welcome content by loading it via the content service and falling back to a sensible default English message when empty/unavailable."
-        },
-        {
-          "path": "frontend/src/pages/ShopInfoPage.tsx",
-          "operation": "modify",
-          "description": "Optionally render additional owner-editable shop info text blocks alongside the fixed required address/phone/timings, using the content service so customers see updates without code changes."
-        }
-      ]
-    },
-    {
-      "id": "REQ-4",
-      "summary": "Implement Feedback page for customers and feedback list viewing in Owner Dashboard.",
-      "acceptanceCriteria": [
-        "Customer can navigate to a dedicated Feedback page after login and submit feedback.",
-        "Owner can view a list of feedback items (with submitter identifier and timestamp) in the dashboard.",
-        "Feedback persists and remains viewable after reload."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/pages/FeedbackPage.tsx",
-          "operation": "create",
-          "description": "Create a dedicated post-login Feedback page for customers with a feedback form and submit action. Guard access so only authenticated customers can submit; show a helpful message for other roles."
-        },
-        {
-          "path": "frontend/src/pages/owner/OwnerDashboardPage.tsx",
-          "operation": "modify",
-          "description": "Add a dashboard section/tab for Owners to view all feedback submissions in a list/table. Use shadcn-ui table/list primitives via composition; verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/services/feedbackService.ts",
-          "operation": "create",
-          "description": "Add a frontend service that calls backend capabilities to submit feedback and fetch feedback entries for owner viewing. Surface errors in the UI and keep English messages."
-        },
-        {
-          "path": "frontend/src/App.tsx",
-          "operation": "modify",
-          "description": "Wire the Feedback route into navigation and ensure it is protected (requires authentication)."
-        }
-      ]
-    },
-    {
-      "id": "REQ-5",
-      "summary": "Implement Appointments booking UI for customers and appointments viewing/management UI for owners.",
-      "acceptanceCriteria": [
-        "Customer can create an appointment request with at least date/time and a note (or purpose).",
-        "Owner can view all appointments in a dashboard table and see key details.",
-        "Appointment records persist across reloads."
+        "frontend/src/pages/AppointmentsPage.tsx no longer displays the “Serial Number / Reference” input.",
+        "Submitting an appointment request still succeeds and shows the existing English success toast/message.",
+        "No validation error requires a serial number in the appointment booking UI."
       ],
       "file_operations": [
         {
           "path": "frontend/src/pages/AppointmentsPage.tsx",
-          "operation": "create",
-          "description": "Create a post-login Appointments page for customers with a form that captures at least appointment date/time and a note/purpose (mapped to the available backend fields). Provide submit confirmation and validation."
-        },
-        {
-          "path": "frontend/src/pages/owner/OwnerDashboardPage.tsx",
           "operation": "modify",
-          "description": "Add an Owner dashboard section/tab to list appointment requests in a table with key details. Include basic management UI as allowed by available backend capabilities (e.g., viewing and status display if supported). Use shadcn-ui composed components; verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/services/appointmentsService.ts",
-          "operation": "create",
-          "description": "Add a frontend service that calls backend capabilities to create an appointment request and fetch all appointments for the owner dashboard view."
-        },
-        {
-          "path": "frontend/src/App.tsx",
-          "operation": "modify",
-          "description": "Wire Appointments route into navigation and ensure it is protected (requires authentication)."
+          "description": "Remove the Serial Number / Reference field from the appointment form UI and validation; ensure submission sends an empty string or backend-safe placeholder value for serialNumber while preserving the existing success UI behavior. Verify the component's usage instructions before implementing."
         }
       ]
     },
     {
-      "id": "REQ-6",
-      "summary": "Implement Test Results: owner create/update UI; customer serial-number search and history of results viewed/associated.",
+      "id": "REQ-30",
+      "summary": "Remove Serial Number from Owner Dashboard appointment display table.",
       "acceptanceCriteria": [
-        "Owner can add a new test result record including a serial number and result fields.",
-        "Customer can search by serial number and see matching result(s).",
-        "Customers can view a list/history of previously viewed or associated results (define and implement one consistent approach and UI).",
-        "Owner can edit an existing test result record from the dashboard."
+        "In the Owner Dashboard appointments tab (frontend/src/pages/owner/OwnerDashboardPage.tsx), the appointments table no longer has a “Serial Number” column and does not render appointment.serialNumber."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/pages/TestResultsLookupPage.tsx",
-          "operation": "create",
-          "description": "Create a customer-facing post-login page to search test results by serial number (exact match as written on the paper), display the result detail, and show an English empty/error state when not found."
-        },
-        {
-          "path": "frontend/src/pages/owner/TestResultsManager.tsx",
-          "operation": "create",
-          "description": "Create an owner-only dashboard module for adding/updating daily test results, including editing existing records. Provide form UI for all required fields and a way to open an edit dialog. Use shadcn-ui dialog/form components via composition; verify the component's usage instructions before implementing."
-        },
-        {
           "path": "frontend/src/pages/owner/OwnerDashboardPage.tsx",
           "operation": "modify",
-          "description": "Wire the Test Results manager module into the Owner Dashboard as a dedicated section/tab and ensure it is accessible only to the Owner."
-        },
-        {
-          "path": "frontend/src/services/testResultsService.ts",
-          "operation": "create",
-          "description": "Add a frontend service for fetching a test result by serial number and updating/saving test results via backend capabilities. Normalize errors into user-friendly English messages."
-        },
-        {
-          "path": "frontend/src/state/testResultsHistory.ts",
-          "operation": "create",
-          "description": "Implement a consistent customer history approach by storing a local history of serial numbers the customer has searched/viewed on the device (e.g., localStorage). Provide functions to add/remove entries and render history in the lookup page."
-        },
-        {
-          "path": "frontend/src/App.tsx",
-          "operation": "modify",
-          "description": "Wire Test Results lookup route into navigation and protect it (requires authentication)."
+          "description": "Update the owner appointments table to remove the Serial Number column and any rendering of appointment.serialNumber, keeping the rest of the table functional. Verify the component's usage instructions before implementing."
         }
       ]
     },
     {
-      "id": "REQ-7",
-      "summary": "Add Owner Dashboard “Users update” section listing newly registered customers plus customer counts and an owner-visible security warning about stored passwords.",
+      "id": "REQ-31",
+      "summary": "Surface detailed English canister error messages for feature queries and mutations (Appointments, Feedback, Customers) instead of generic retry prompts.",
       "acceptanceCriteria": [
-        "Owner Dashboard contains a section titled exactly \"Users update\".",
-        "When a new user registers, the user appears in \"Users update\" without manual refresh (or via an obvious refresh button if live update is not feasible).",
-        "Owner sees total registered customer count.",
-        "The list includes username, mobile number, and the stored password value (as explicitly requested)."
+        "When submitting feedback fails, the toast/alert includes the extracted canister error detail (English).",
+        "When submitting an appointment fails, the toast/alert includes the extracted canister error detail (English).",
+        "When customer registration fails due to canister call failure, the UI shows an English error with the underlying reason when available (not only a generic message)."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/pages/owner/UsersUpdateSection.tsx",
-          "operation": "create",
-          "description": "Create an Owner-only dashboard section titled exactly \"Users update\" that lists customers with username, mobile number, and password as provided by backend capability. Add a visible warning banner explaining that storing/displaying passwords is insecure but included by request. Use shadcn-ui alert/table components via composition; verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/pages/owner/OwnerDashboardPage.tsx",
+          "path": "frontend/src/pages/FeedbackPage.tsx",
           "operation": "modify",
-          "description": "Wire the \"Users update\" section into the Owner Dashboard layout and ensure it is visible only to the Owner role."
+          "description": "Use the shared error extraction helper to display the underlying canister failure reason in English in the toast/alert when feedback submission fails (including authorization/sign-in guidance when applicable). Verify the component's usage instructions before implementing."
         },
         {
-          "path": "frontend/src/services/customersService.ts",
-          "operation": "create",
-          "description": "Add a frontend service to fetch the customer list and customer count from backend capabilities. Support either periodic polling or an obvious manual refresh button if live update is not feasible."
+          "path": "frontend/src/pages/AppointmentsPage.tsx",
+          "operation": "modify",
+          "description": "Use the shared error extraction helper to display the underlying canister failure reason in English in the toast/alert when appointment submission fails (including authorization/sign-in guidance when applicable). Verify the component's usage instructions before implementing."
         },
         {
           "path": "frontend/src/pages/RegisterPage.tsx",
           "operation": "modify",
-          "description": "After successful customer registration, trigger a lightweight invalidation/refetch mechanism so the owner’s \"Users update\" view can reflect newly registered users promptly (e.g., via query invalidation/polling-friendly cache keys)."
-        }
-      ]
-    },
-    {
-      "id": "REQ-8",
-      "summary": "Implement Forgot Password flow: customer requests reset; owner manages requests and sets a 4-digit passcode; customer resets password using mobile + passcode.",
-      "acceptanceCriteria": [
-        "Customer can create a forgot-password request from the login screen.",
-        "Owner Dashboard shows a list of pending password reset requests.",
-        "Owner can generate/set a 4-digit reset passcode for a given request and mark it as active.",
-        "Customer can enter mobile number + 4-digit passcode and set a new password.",
-        "After successful reset, the customer can log in with the new password."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/pages/ForgotPasswordRequestPage.tsx",
-          "operation": "create",
-          "description": "Create a public/pre-login page reachable from Login where a customer can submit a forgot-password request using mobile number (and optionally username) and the desired new password (per available backend capability). Provide clear English guidance that passcode will be shared by the owner out-of-band."
+          "description": "Replace generic registration failure messaging with extracted English canister error details so users see the actual reason when backend persistence fails. Verify the component's usage instructions before implementing."
         },
         {
-          "path": "frontend/src/pages/ResetPasswordWithPasscodePage.tsx",
-          "operation": "create",
-          "description": "Create a public/pre-login page where the customer enters mobile number + 4-digit passcode and sets a new password. Include validation for 4 digits and clear success/failure messaging."
-        },
-        {
-          "path": "frontend/src/pages/owner/PasswordResetsSection.tsx",
-          "operation": "create",
-          "description": "Add an Owner-only dashboard section to review pending reset requests and set/generate a 4-digit passcode for a mobile number. Provide copy/share helper text for out-of-band delivery. Use shadcn-ui inputs/dialogs via composition; verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/services/passwordResetService.ts",
-          "operation": "create",
-          "description": "Add a frontend service for password-reset related backend capabilities: request reset, set passcode, verify passcode, and finalize password reset. Map errors to user-friendly English messages."
-        },
-        {
-          "path": "frontend/src/pages/LoginPage.tsx",
+          "path": "frontend/src/utils/canisterErrors.ts",
           "operation": "modify",
-          "description": "Add navigation links/buttons to Forgot Password request and passcode reset pages from the Login screen."
-        },
-        {
-          "path": "frontend/src/App.tsx",
-          "operation": "modify",
-          "description": "Wire Forgot Password request and Passcode Reset routes into the router as public routes, and wire the Owner dashboard reset section into the Owner Dashboard route."
-        }
-      ]
-    },
-    {
-      "id": "REQ-9",
-      "summary": "Add UI support for a 5-minute delay policy after owner-initiated password reset, including countdown messaging.",
-      "acceptanceCriteria": [
-        "Owner can reset a user password and the system records the reset time.",
-        "If the user attempts to log in/reset immediately after an owner reset, the UI indicates the password will be active after 5 minutes and shows remaining time.",
-        "After 5 minutes elapse, the new password works."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/state/passwordResetDelayPolicy.ts",
-          "operation": "create",
-          "description": "Implement a frontend representation of the 5-minute delay policy for password resets (e.g., store last reset timestamp per mobile number locally after owner action, and compute remaining time). Provide helpers to format and expose remaining time to UI."
-        },
-        {
-          "path": "frontend/src/pages/owner/PasswordResetsSection.tsx",
-          "operation": "modify",
-          "description": "After the owner finalizes a password reset action, record the reset time via the delay policy helper and display a note that the new password becomes valid after 5 minutes."
-        },
-        {
-          "path": "frontend/src/pages/LoginPage.tsx",
-          "operation": "modify",
-          "description": "When a user attempts login after an owner reset within the 5-minute window, show an English availability message and countdown using the delay policy helper (without blocking other navigation)."
-        },
-        {
-          "path": "frontend/src/pages/ResetPasswordWithPasscodePage.tsx",
-          "operation": "modify",
-          "description": "Show the same countdown/availability message on the passcode reset screen when a recent owner reset is detected and the 5-minute window has not elapsed."
-        }
-      ]
-    },
-    {
-      "id": "REQ-10",
-      "summary": "Add PWA installability (manifest + service worker) and an in-app install prompt/help section.",
-      "acceptanceCriteria": [
-        "App provides a web app manifest and service worker so install is available on supported browsers.",
-        "UI includes an install prompt/help when installation is supported, and it is not shown when unsupported.",
-        "Installed app launches with proper name and icon."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/public/manifest.webmanifest",
-          "operation": "create",
-          "description": "Add a web app manifest configuring app name, short name, start URL, display mode, theme/background colors, and icons. Reference the generated icons at frontend/public/assets/generated/app-icon.dim_512x512.png and frontend/public/assets/generated/app-icon.dim_192x192.png."
-        },
-        {
-          "path": "frontend/public/sw.js",
-          "operation": "create",
-          "description": "Add a minimal service worker for offline caching of core shell assets (HTML/CSS/JS/manifest/icons/background) sufficient for installability. Keep logic simple and maintainable."
-        },
-        {
-          "path": "frontend/src/pwa/registerServiceWorker.ts",
-          "operation": "create",
-          "description": "Add a small helper to register the service worker on app load and expose registration status to the UI."
-        },
-        {
-          "path": "frontend/src/main.tsx",
-          "operation": "modify",
-          "description": "Register the service worker via the helper to enable PWA installability."
-        },
-        {
-          "path": "frontend/src/components/PwaInstallHelp.tsx",
-          "operation": "create",
-          "description": "Create an in-app install prompt/help component that listens for install capability (e.g., beforeinstallprompt where supported) and conditionally shows install instructions when supported, hidden when unsupported. Use shadcn-ui alert/button components via composition; verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/pages/WelcomePage.tsx",
-          "operation": "modify",
-          "description": "Place the PWA install prompt/help section in an existing required page (e.g., Welcome) to avoid introducing unnecessary new top-level pages."
-        },
-        {
-          "path": "frontend/public/assets/generated/app-icon.dim_512x512.png",
-          "operation": "create",
-          "description": "Add generated PWA icon asset at the exact path frontend/public/assets/generated/app-icon.dim_512x512.png and ensure it is referenced by the manifest."
-        },
-        {
-          "path": "frontend/public/assets/generated/app-icon.dim_192x192.png",
-          "operation": "create",
-          "description": "Add generated PWA icon asset at the exact path frontend/public/assets/generated/app-icon.dim_192x192.png and ensure it is referenced by the manifest."
-        }
-      ]
-    },
-    {
-      "id": "REQ-11",
-      "summary": "Display a shareable app link and an on-screen QR code for the app URL.",
-      "acceptanceCriteria": [
-        "A screen (or dashboard card) shows the current app URL as a copyable link.",
-        "A QR code is generated client-side for the same URL.",
-        "QR code is scannable and navigates to the app."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/components/ShareAppLinkCard.tsx",
-          "operation": "create",
-          "description": "Create a reusable card that shows the current app URL, offers a copy-to-clipboard action, and renders a QR code generated client-side for the same URL. Use shadcn-ui card/button components via composition; verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/pages/WelcomePage.tsx",
-          "operation": "modify",
-          "description": "Add the ShareAppLinkCard to the Welcome page (or another already-required screen) so both customers and owners can share the link/QR after login without adding a new top-level route."
-        },
-        {
-          "path": "frontend/src/pages/owner/OwnerDashboardPage.tsx",
-          "operation": "modify",
-          "description": "Optionally also surface the share link/QR as a small dashboard card for the Owner for quick sharing."
-        },
-        {
-          "path": "frontend/package.json",
-          "operation": "create",
-          "description": "Add/define frontend dependencies needed for client-side QR generation (e.g., a QR code library) and ensure build scripts remain compatible with the existing template."
-        }
-      ]
-    },
-    {
-      "id": "REQ-12",
-      "summary": "Add optional biometric/fingerprint lock using WebAuthn/Passkeys (when supported) to unlock protected areas after login.",
-      "acceptanceCriteria": [
-        "Settings UI allows enabling/disabling biometric unlock (when the browser/device supports it).",
-        "When enabled, the app requires a WebAuthn re-auth before showing protected pages on that device/session.",
-        "If unsupported, the UI clearly indicates biometric lock is unavailable."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/services/webauthnLockService.ts",
-          "operation": "create",
-          "description": "Implement a WebAuthn/Passkeys helper service for capability detection and performing a re-auth/unlock ceremony where supported. Keep secrets on-device and avoid server-side dependencies."
-        },
-        {
-          "path": "frontend/src/state/biometricLockState.ts",
-          "operation": "create",
-          "description": "Store per-device/session biometric lock enablement state (e.g., localStorage) and expose helpers for checking whether unlock is required."
-        },
-        {
-          "path": "frontend/src/pages/SettingsPage.tsx",
-          "operation": "create",
-          "description": "Create a Settings page (post-login) with a biometric lock enable/disable toggle, showing clear English messaging for supported/unsupported devices. Use shadcn-ui switch/alert components via composition; verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/auth/ProtectedRoute.tsx",
-          "operation": "modify",
-          "description": "When biometric lock is enabled, require a WebAuthn re-auth/unlock step before rendering protected routes; if the unlock fails/cancels, keep the user on a locked screen/state with a retry option."
-        },
-        {
-          "path": "frontend/src/App.tsx",
-          "operation": "modify",
-          "description": "Wire Settings route into authenticated navigation and ensure it is protected."
-        }
-      ]
-    },
-    {
-      "id": "REQ-13",
-      "summary": "Enhance Owner Dashboard management UI with explicit Edit actions and an “Add column” capability for Test Results, visible to customers on lookup.",
-      "acceptanceCriteria": [
-        "Owner Dashboard tables (users, appointments, feedback, test results) provide an Edit action for applicable records.",
-        "Test Results management includes an \"Add column\" flow that creates at least one additional custom field that is saved and shown in the table and result detail view.",
-        "Customers can see the custom field on serial-number result lookup when present."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/pages/owner/OwnerDashboardPage.tsx",
-          "operation": "modify",
-          "description": "Add explicit Edit actions in each relevant dashboard section/table (users, appointments, feedback, test results) where applicable in the UI. Keep edit controls Owner-only and role-guarded."
-        },
-        {
-          "path": "frontend/src/pages/owner/TestResultsManager.tsx",
-          "operation": "modify",
-          "description": "Implement an \"Add column\" flow for the Test Results table that lets the owner define an additional field name/value (mapped to the available additionalFieldName/additionalFieldValue fields) and ensures it is saved and displayed in the manager table and edit form. Use shadcn-ui dialog/inputs via composition; verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/pages/TestResultsLookupPage.tsx",
-          "operation": "modify",
-          "description": "Display the additional custom field in the customer result detail view when present, so customers see the custom field on serial-number lookup."
-        }
-      ]
-    },
-    {
-      "id": "REQ-14",
-      "summary": "Apply a consistent modern theme (non-blue/purple primary) matching the background image across all pages.",
-      "acceptanceCriteria": [
-        "Theme is consistent across pages (buttons, headings, cards, inputs).",
-        "Typography and colors maintain good contrast/readability on top of the background image.",
-        "Primary palette is not blue/purple-dominant."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/index.css",
-          "operation": "create",
-          "description": "Define global theme tokens (CSS variables) for a modern, readable palette that complements the background image and avoids blue/purple-dominant primary colors (e.g., gold/amber + neutral tones). Ensure consistent typography and spacing defaults for the app."
-        },
-        {
-          "path": "frontend/tailwind.config.js",
-          "operation": "modify",
-          "description": "Adjust Tailwind theme extensions as needed to support the chosen palette and consistent component styling using existing token-based color mappings (avoid introducing new global styling entry points)."
-        },
-        {
-          "path": "frontend/src/components/AppLayout.tsx",
-          "operation": "create",
-          "description": "Create a shared layout component applying consistent page spacing, card styling, overlays for readability on the background, and shared header/nav for authenticated areas. Use shadcn-ui composed components; verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/App.tsx",
-          "operation": "modify",
-          "description": "Wrap routes with the shared AppLayout so the theme is applied consistently across login, customer pages, and owner dashboard."
-        }
-      ]
-    },
-    {
-      "id": "REQ-15",
-      "summary": "Add provided background image as a global responsive background with readable foreground overlay.",
-      "acceptanceCriteria": [
-        "Background image is included as a static asset and rendered as a responsive background.",
-        "Foreground content remains readable (overlay/blur/tint as needed)."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/public/assets/generated/shop-background.dim_1920x1080.png",
-          "operation": "create",
-          "description": "Add the generated background image asset at the exact path frontend/public/assets/generated/shop-background.dim_1920x1080.png."
-        },
-        {
-          "path": "frontend/src/index.css",
-          "operation": "modify",
-          "description": "Apply the global background image (responsive cover) and a consistent overlay/tint to ensure foreground readability on login and main shell pages. Reference the exact asset path frontend/public/assets/generated/shop-background.dim_1920x1080.png."
-        },
-        {
-          "path": "frontend/src/components/AppLayout.tsx",
-          "operation": "modify",
-          "description": "Ensure the layout provides a consistent readable content container (e.g., translucent card/overlay) so text and inputs remain legible against the global background."
+          "description": "Enhance error extraction to better handle common agent/canister error shapes (including nested fields) so UI pages can reliably show actionable English messages instead of generic text. Verify the component's usage instructions before implementing."
         }
       ]
     }

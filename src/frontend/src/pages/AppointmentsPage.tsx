@@ -6,13 +6,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { CheckCircle2, Loader2 } from 'lucide-react';
+import { CheckCircle2, Loader2, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import { extractErrorMessage } from '../utils/canisterErrors';
 
 export default function AppointmentsPage() {
   const addAppointmentMutation = useAddAppointment();
   const [form, setForm] = useState({
-    serialNumber: '',
     testType: '',
     appointmentDate: '',
   });
@@ -22,15 +22,20 @@ export default function AppointmentsPage() {
     e.preventDefault();
     
     try {
-      await addAppointmentMutation.mutateAsync(form);
+      await addAppointmentMutation.mutateAsync({
+        serialNumber: '', // Empty string as backend-safe placeholder
+        testType: form.testType,
+        appointmentDate: form.appointmentDate,
+      });
       
       setSubmitted(true);
       toast.success('Appointment request submitted successfully!');
-      setForm({ serialNumber: '', testType: '', appointmentDate: '' });
+      setForm({ testType: '', appointmentDate: '' });
       
       setTimeout(() => setSubmitted(false), 3000);
     } catch (error) {
-      toast.error('Failed to submit appointment. Please try again.');
+      const errorMsg = extractErrorMessage(error);
+      toast.error(`Failed to submit appointment: ${errorMsg}`);
     }
   };
 
@@ -54,18 +59,6 @@ export default function AppointmentsPage() {
           )}
           
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="serialNumber">Serial Number / Reference</Label>
-              <Input
-                id="serialNumber"
-                type="text"
-                placeholder="Enter serial number or reference"
-                value={form.serialNumber}
-                onChange={(e) => setForm({ ...form, serialNumber: e.target.value })}
-                required
-              />
-            </div>
-            
             <div className="space-y-2">
               <Label htmlFor="testType">Test Type / Purpose</Label>
               <Textarea
